@@ -20,7 +20,7 @@ These are observed presentation patterns, not measured conversion evidence or en
 
 ## Applied changes
 
-- Lead with the supported network and platform; use one repeated primary action to the existing Chrome listing.
+- Lead with the practical job—sending and receiving from Chrome—rather than assuming visitors recognize Lattice. Explain Lattice as the transaction network and Selfhold as its wallet in the hero and first benefits section. Use one repeated primary action to the existing Chrome listing.
 - Describe three everyday benefits: reviewing sends, keeping keys locally and choosing a connection. Explain a node in context.
 - Explain self-custody and recovery in ordinary language before the setup steps.
 - Show a larger, responsive crop of the actual welcome screenshot, retaining its original branding and explicit historical caption. The diagram explains signing; it is not presented as product UI.
