@@ -1,0 +1,14 @@
+{
+  "name": "selfhold-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Selfhold wallet website",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/serve.mjs",
+    "test": "node --test",
+    "check:links": "node scripts/check-links.mjs"
+  },
+  "engines": { "node": ">=22" }
+}

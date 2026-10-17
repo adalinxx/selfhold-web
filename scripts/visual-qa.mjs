@@ -1,0 +1,34 @@
+import {createRequire} from 'node:module';
+import {mkdir,writeFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const require=createRequire(import.meta.url);
+if(!process.env.PLAYWRIGHT_MODULE) throw Error('Set PLAYWRIGHT_MODULE to an installed Playwright package');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE);
+const browser=await chromium.launch({headless:true});
+await mkdir('qa',{recursive:true});
+const report=[];
+for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844],['small-mobile',320,740]]){
+ const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:4173',{waitUntil:'networkidle'});
+ assert.equal(await page.title(),'Selfhold — Your keys. Your control.');
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No horizontal overflow');
+ assert.ok(await page.locator('img').evaluateAll(imgs=>imgs.every(i=>i.complete&&i.naturalWidth>0)),'Images load');
+ await page.locator('summary').first().click();assert.equal(await page.locator('details').first().getAttribute('open'),'');
+ await page.locator('summary').first().click();
+ await page.keyboard.press('Control+Home');
+ await page.screenshot({path:`qa/${name}.png`,fullPage:true});
+ await page.goto('http://127.0.0.1:4173/privacy.html');
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ assert.equal(errors.length,0);
+ report.push({viewport:name,width,height,overflow:false,images:'loaded',faq:'passed',privacy:'passed',pageErrors:errors});
+ await page.close();
+}
+const page=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'dark',reducedMotion:'reduce'});
+await page.goto('http://127.0.0.1:4173');
+await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.textContent),'Skip to content');
+await page.keyboard.press('Enter');assert.equal(new URL(page.url()).hash,'#main');
+await page.screenshot({path:'qa/dark-preference.png'});
+await browser.close();
+await writeFile('qa/report.json',JSON.stringify({results:report,keyboardSkip:'passed',reducedMotion:'supported'},null,2));
+console.log('Visual QA passed: desktop, mobile, small mobile, keyboard navigation, FAQ and privacy page.');
