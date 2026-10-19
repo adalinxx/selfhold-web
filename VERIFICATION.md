@@ -21,3 +21,12 @@ To repeat browser checks with an existing Playwright installation, set `PLAYWRIG
 - Revised desktop and mobile full-page screenshots were visually reviewed and saved locally as `qa/revised-desktop.png` and `qa/revised-mobile.png`.
 - Browser viewport was reset after checks and the revised local homepage was left open for review.
 - Research sources and rationale are documented in `DESIGN.md`. These presentation changes have not been conversion-tested with users.
+
+## Acquisition page — 2026-10-19
+
+- Built from merged main `8ab6a2b`; wallet main README and privacy documentation inspected at `32d5a3c`.
+- Static build and four content tests passed. All six distinct external homepage URLs returned HTTP 200, including the supplied Selfhold store URL.
+- Chrome visual review at 1440×1000 and 390×844; 320×740 overflow and image-loading checks passed. Native FAQ toggling and mobile privacy-page navigation passed. Browser viewport reset after checking.
+- Screenshots saved locally as `qa/acquisition-desktop.png` and `qa/acquisition-mobile.png`; no personal browser chrome is included.
+- Public store page navigation was unavailable in the Chrome automation connection (“Not allowed”). A successful HTTP link check does not confirm displayed title, version or installation compatibility. The page avoids stale draft/version assertions; see DESIGN.md.
+- No wallet interaction, store submission, analytics, hosting or visibility changes.
