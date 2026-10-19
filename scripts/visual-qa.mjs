@@ -11,7 +11,7 @@ for(const [name,width,height] of [['desktop',1440,1000],['mobile',390,844],['sma
  const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:4173',{waitUntil:'networkidle'});
- assert.equal(await page.title(),'Selfhold — Your keys. Your control.');
+ assert.equal(await page.title(),'Selfhold — Send, receive, keep your keys.');
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No horizontal overflow');
  assert.ok(await page.locator('img').evaluateAll(imgs=>imgs.every(i=>i.complete&&i.naturalWidth>0)),'Images load');
  await page.locator('summary').first().click();assert.equal(await page.locator('details').first().getAttribute('open'),'');

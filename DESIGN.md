@@ -1,31 +1,39 @@
-# Homepage purpose and design rationale
+# Selfhold acquisition page
 
-The goal is informed installation by people who want to use Lattice in desktop Chrome, including people new to self-custody. A visitor should understand the product, the responsibility of holding their own keys, and the next step. Source inspection supports that decision as a secondary path.
+## Goal and audience
 
-## Review of the initial homepage
+Help a visitor understand the practical job, judge whether Selfhold fits, and install it from the official Chrome Web Store. The immediate audience is people using or exploring Lattice, including developers and node operators. Beginners need the network explained early; no prior familiarity is assumed.
 
-The initial page relied on unexplained terms (keys, nodes, local signing), a large brand mark, a small product screenshot and several differently worded calls to action. Draft-release mechanics competed with the main message. Small monospace body copy and narrow feature columns made reading harder, particularly on phones. Trust statements needed nearby, inspectable evidence.
+The page leads with sending, receiving and holding keys. It explains Lattice in the hero and a short strip directly below it, then shows the choices a person makes: review a transfer, keep a backup, and select a hosted or personal node. The primary action is consistently the store listing. Source inspection and setup guidance support that action.
 
-## Patterns from official homepages
+## Research patterns
 
-Research reviewed on 2026-10-17:
+Research reviewed on 2026-10-19, using official product pages and project sources:
 
-- [Signal](https://signal.org/): a short positioning statement followed by an immediate product explanation, download action and everyday uses.
-- [Phantom](https://phantom.com/) and its [security page](https://phantom.com/security): user control explained as a benefit, with deeper supporting material available separately.
-- [Bitwarden](https://bitwarden.com/) and its [compliance page](https://bitwarden.com/compliance/): distinguish inspectable code from independent security assessments.
-- [Proton Pass](https://proton.me/pass): explain what the product is, where it works and how to start.
-- [MetaMask](https://metamask.io/): product visibility and beginner guidance. Selfhold does not borrow its product breadth or mature-company claims.
+- [MetaMask](https://metamask.io/), [Rainbow](https://rainbow.me/) and [Keplr](https://www.keplr.app/): lead with recognizable activities, make the product visible, and provide an entry point that fits the supported ecosystem.
+- [Rabby](https://github.com/RabbyHub/Rabby): concrete transaction-review capabilities are more useful than generic claims of safety.
+- [Signal](https://signal.org/) and [Proton Pass](https://proton.me/pass): explain the category, supported platform and next step immediately.
+- [Bitwarden](https://bitwarden.com/) and its [compliance material](https://bitwarden.com/compliance/): distinguish code visibility from independent security evidence.
 
-These are observed presentation patterns, not measured conversion evidence or endorsements of Selfhold.
+These are observed presentation patterns, not measured conversion results or endorsements. Selfhold does not inherit their network coverage, trading features, security assessments or adoption claims.
 
-## Applied changes
+## Product grounding
 
-- Lead with the practical job—sending and receiving from Chrome—rather than assuming visitors recognize Lattice. Explain Lattice as the transaction network and Selfhold as its wallet in the hero and first benefits section. Use one repeated primary action to the existing Chrome listing.
-- Describe three everyday benefits: reviewing sends, keeping keys locally and choosing a connection. Explain a node in context.
-- Explain self-custody and recovery in ordinary language before the setup steps.
-- Show a larger, responsive crop of the actual welcome screenshot, retaining its original branding and explicit historical caption. The diagram explains signing; it is not presented as product UI.
-- Pair open-source, privacy and security statements with project documentation. Make no audit, endorsement or safety guarantee.
-- Keep a short branding notice beside the action; place precise release mechanics in the FAQ. Add Lattice and platform FAQs.
-- Use larger proportional body type for reading, retaining the approved mark, monochrome palette, monospace labels and hairline structure.
+Wallet main inspected at `32d5a3cd277a87de27a88fd0355e92ea29386fac`; package version 0.4.1. The README and privacy policy support local signing, an encrypted vault, review of sends and fees, node choice, Lattice parent/child chains, and encrypted backup files/QR codes.
 
-No analytics or tracking is introduced. The next product decision to validate with real readers is whether they can explain what Selfhold does and what they must back up before following the installation link.
+- [Wallet source](https://github.com/adalinxx/lattice-wallet)
+- [Privacy policy](https://github.com/adalinxx/lattice-wallet/blob/main/docs/privacy-policy.md)
+- [Security policy](https://github.com/adalinxx/lattice-wallet/blob/main/SECURITY.md)
+- [Chrome listing](https://chromewebstore.google.com/detail/selfhold/amcobhbipbblfjonmoiicihhfglkhpce)
+
+The store URL returned HTTP 200. Direct public-store navigation in the available Chrome automation connection returned “Not allowed”, so the displayed live title/version could not be independently confirmed. Source version is not treated as proof of store availability. The page removes stale October 17 draft claims, avoids a numerical store-version assertion and directs users to the listing for current distribution details.
+
+The current repository still supplies earlier-branded welcome and node-choice screenshots. Both are actual UI, contain no wallet credentials or personal data, and are explicitly described as documentation/earlier UI rather than a claim about the latest distributed interface. The approved Selfhold mark is unchanged. Screenshot bytes were inspected for identifying metadata.
+
+[Moniker](https://github.com/adalinxx/moniker/blob/main/README.md) suggests a tangible future ecosystem path (a handle/profile), but live compatibility and a reliable public HTTPS entry point were not verified. It is deliberately not promoted as an immediately working install-to-use journey.
+
+## Design and measurement
+
+A restrained monochrome product stage replaces an abstract hero diagram. A real connection screen explains hosted versus own-node choices. Large proportional type, clear contrast, descriptive links, native expandable FAQs and single-column mobile sections support comprehension. Installation steps and the recovery responsibility share one section, before the final action.
+
+No analytics or tracking is introduced. Improvement in acquisition is a hypothesis, not a claimed result. The first qualitative check is whether a new reader can explain what Selfhold does, which network it supports, and what they must back up before installing. Any analytics or broader distribution plan needs separate approval.
