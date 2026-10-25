@@ -14,7 +14,11 @@ npm run dev
 npm run check:links
 ```
 
-`public/` contains the source. `dist/` is the generated site. The preview server binds only to loopback. No public deployment, domain or DNS is configured. Review hosting privacy and security headers before any separately approved public deployment. Open subsequent change pull requests as drafts.
+`public/` contains the source. `dist/` is the generated site. The preview server binds only to loopback.
+
+## Deploy
+
+Every push to `main` runs `.github/workflows/pages.yml`: it builds, runs the tests and publishes `dist/` to GitHub Pages, served at https://selfhold.app. The domain is set in the repository's Pages settings; its DNS (A and AAAA records for GitHub Pages, DNS only) is in Cloudflare. GitHub Pages sends no custom security headers, and the site has no scripts, forms or third-party requests.
 
 ## Content and provenance
 
