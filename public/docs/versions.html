@@ -40,7 +40,7 @@
 &lt;script type="module"&gt;
   import { selfhold } from "https://wallet.selfhold.app/v1.0.0/selfhold.js";
 &lt;/script&gt;</code></pre>
-  <p>The import map's <code>integrity</code> makes the browser refuse the script unless it is exactly that release. Each release's hash is published beside it, at <code>/v1.0.0/integrity.txt</code>. You can also copy the file into your site.</p>
+  <p>The import map's <code>integrity</code> makes the browser refuse the script unless it is exactly that release. A browser without import-map integrity loads it unchecked; for a guarantee in every browser, copy the file into your site. Each release's hash is published beside it, at <code>/v1.0.0/integrity.txt</code>. You can also copy the file into your site.</p>
   <p>A change that would break a site gets a new line, <code>/v2/</code>, and <code>/v1/</code> keeps working. Selfhold's window keeps answering older versions of the library.</p>
 
   <h2 id="changes">Changes</h2>

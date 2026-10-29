@@ -67,7 +67,7 @@
     <text x="524" y="218" text-anchor="middle">5. signed transaction</text>
     <text x="234" y="268" text-anchor="middle">6. Sent: its CID and nonce</text>
     <text x="380" y="348" text-anchor="middle">7. sent.wait(): reads the account until the write lands</text>
-    <text x="380" y="400" text-anchor="middle" opacity="0.75">The key exists only inside the window, only while it signs.</text>
+    <text x="380" y="400" text-anchor="middle" opacity="0.75">The key exists only inside the window, only for the request.</text>
   </g>
 </svg>
 <figcaption>
@@ -82,12 +82,12 @@
   </ol>
 </figcaption>
 </figure>
-  <p>Selfhold for Chrome works the same way, except that its own window opens instead of wallet.selfhold.app.</p>
+  <p>Selfhold for Chrome is similar, with differences: its own window asks, a site it's connected to isn't asked again to connect, it sends through the node the person chose in it (not your <code>hosts</code>), and it pays fees from coins (no sponsor).</p>
 
   <h2 id="account">The account</h2>
   <ul>
     <li><strong>One account for every site.</strong> Selfhold's window gives the same address to every site the person connects. Sites can see each other's records about that address on the chain, as with any public account.</li>
-    <li><strong>The key is never stored.</strong> The window derives it from the passkey each time it signs (WebAuthn's PRF extension), then forgets it. The passkey belongs to wallet.selfhold.app, so no other site can ask for it.</li>
+    <li><strong>The key is never stored.</strong> The window derives it from the passkey for each request the person approves (WebAuthn's PRF extension), and erases it when the request is done. The passkey belongs to wallet.selfhold.app, so no other site can ask for it.</li>
     <li><strong>A new device</strong> signs in with <strong>I have a Selfhold passkey</strong>, using the synced passkey. A browser or password manager without the PRF extension can't make the key; the window says so.</li>
   </ul>
 
@@ -108,7 +108,7 @@
   <dl class="api">
     <dt>Chains and <code>chainPath</code></dt><dd>Lattice has a main chain, Nexus, and child chains under it. A write names its chain by path, such as <code>["Nexus", "your-chain"]</code>. Each chain may have its own rules for the records it accepts.</dd>
     <dt>Records</dt><dd>A chain holds records: keys with string values. A write changes some of them, all at once or not at all.</dd>
-    <dt>Nodes and hosts</dt><dd>A node holds a chain and takes transactions for it. The hosts a write goes to are the ones you give <code>selfhold()</code>, or else the ones Nexus lists for the chain.</dd>
+    <dt>Nodes and hosts</dt><dd>A node holds a chain and takes transactions for it. Selfhold's window sends a write to the hosts you give <code>selfhold()</code>, or else the ones Nexus lists for the chain.</dd>
     <dt>Fees</dt><dd>Each transaction pays a fee to the miner who records it. It comes from the account's coins, or from a fee sponsor, paid with work: see <a href="fees.html">Pay fees with work</a>.</dd>
     <dt>Nonce</dt><dd>Each account's transactions are numbered. A write has landed once the account's next number has passed it.</dd>
     <dt>Blocks</dt><dd>A block every 10 seconds or so records the transactions waiting. That's why a write usually lands within seconds of being sent.</dd>

@@ -28,7 +28,11 @@
   </section>
   <section class="error-entry" id="waiting" aria-labelledby="waiting-title">
     <h2 id="waiting-title">The window opens and says “Waiting for the site…” forever</h2>
-    <p>The window can't hear your page. Most often your page sends <code>Cross-Origin-Opener-Policy: same-origin</code>, which cuts it off from windows it opens: use <code>same-origin-allow-popups</code>, or no COOP header. It also happens if your page is served over http from anywhere but localhost or 127.0.0.1.</p>
+    <p>The window answers only https pages, and pages on <code>http://localhost</code> or <code>http://127.0.0.1</code>. Your page is served over http from another address: serve it over https, or from localhost.</p>
+  </section>
+  <section class="error-entry" id="home" aria-labelledby="home-title">
+    <h2 id="home-title">The window shows Selfhold's home page, and the call fails with Closed</h2>
+    <p>Your page sends <code>Cross-Origin-Opener-Policy: same-origin</code>, which cuts it off from the windows it opens. Use <code>same-origin-allow-popups</code>, or no COOP header.</p>
   </section>
   <section class="error-entry" id="file" aria-labelledby="file-title">
     <h2 id="file-title">It doesn't work from a file I opened directly</h2>

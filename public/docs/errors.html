@@ -24,7 +24,8 @@
   <pre tabindex="0" role="region" aria-label="Example: handle errors by code"><code>try {
   await wallet.writeRecords(request, { account: address });
 } catch (error) {
-  if (error.code === &quot;Declined&quot; || error.code === &quot;Closed&quot;) return; // a cancel
+  if (error.code === &quot;Declined&quot;) return; // a cancel: nothing was signed
+  if (error.code === &quot;Closed&quot;) return refreshFromChain(); // most likely a cancel; a write may have gone out
   if (error.code === &quot;NeedsCoins&quot;) return askForCoins(error.address, error.needed - error.balance);
   if (error.code === &quot;AccountChanged&quot; || error.code === &quot;NotConnected&quot;) return refreshAccount();
   showError(error.message);
@@ -34,7 +35,7 @@
   <h2 id="codes">Codes</h2>
   <div class="table"><table>
     <thead><tr><th><code>code</code></th><th>What happened</th></tr></thead>
-    <tbody><tr><td><a href="#PopupBlocked"><code>PopupBlocked</code></a></td><td>The browser blocked Selfhold's window.</td></tr><tr><td><a href="#Closed"><code>Closed</code></a></td><td>The person closed the window before it answered.</td></tr><tr><td><a href="#Declined"><code>Declined</code></a></td><td>The person declined.</td></tr><tr><td><a href="#Reloaded"><code>Reloaded</code></a></td><td>The window was reloaded in the middle of a call.</td></tr><tr><td><a href="#AccountChanged"><code>AccountChanged</code></a></td><td>The wallet uses another account now.</td></tr><tr><td><a href="#NotConnected"><code>NotConnected</code></a></td><td>This site has no account from the wallet.</td></tr><tr><td><a href="#NeedsCoins"><code>NeedsCoins</code></a></td><td>The account can't pay for the write.</td></tr><tr><td><a href="#NoWallet"><code>NoWallet</code></a></td><td>Selfhold for Chrome isn't installed.</td></tr><tr><td><a href="#Lost"><code>Lost</code></a></td><td>Another write landed in this one's place.</td></tr><tr><td><a href="#NotRecorded"><code>NotRecorded</code></a></td><td>Sent, and still not recorded after 30 minutes.</td></tr><tr><td><a href="#Failed"><code>Failed</code></a></td><td>Anything else.</td></tr></tbody>
+    <tbody><tr><td><a href="#PopupBlocked"><code>PopupBlocked</code></a></td><td>The browser blocked Selfhold's window.</td></tr><tr><td><a href="#Closed"><code>Closed</code></a></td><td>The window closed before it answered your page.</td></tr><tr><td><a href="#Declined"><code>Declined</code></a></td><td>The person declined.</td></tr><tr><td><a href="#Reloaded"><code>Reloaded</code></a></td><td>The window was reloaded in the middle of a call.</td></tr><tr><td><a href="#AccountChanged"><code>AccountChanged</code></a></td><td>The wallet uses another account now.</td></tr><tr><td><a href="#NotConnected"><code>NotConnected</code></a></td><td>This site has no account from the wallet.</td></tr><tr><td><a href="#NeedsCoins"><code>NeedsCoins</code></a></td><td>The account can't pay for the write.</td></tr><tr><td><a href="#NoWallet"><code>NoWallet</code></a></td><td>Selfhold for Chrome isn't installed.</td></tr><tr><td><a href="#Lost"><code>Lost</code></a></td><td>Another write landed in this one's place.</td></tr><tr><td><a href="#NotRecorded"><code>NotRecorded</code></a></td><td>Sent, and still not recorded after 30 minutes.</td></tr><tr><td><a href="#Failed"><code>Failed</code></a></td><td>Anything else.</td></tr></tbody>
   </table></div>
 
   <section class="error-entry" id="PopupBlocked" aria-labelledby="PopupBlocked-title">
@@ -49,12 +50,12 @@
   </section>
   <section class="error-entry" id="Closed" aria-labelledby="Closed-title">
     <h3 id="Closed-title"><code>Closed</code></h3>
-    <p>The person closed the window before it answered.</p>
+    <p>The window closed before it answered your page.</p>
     <dl>
-      <dt>Why</dt><dd>They closed the window or its tab, or navigated it away.</dd>
+      <dt>Why</dt><dd>The person closed the window or its tab. Almost always that's before approving, as a cancel. But if they closed it while it was sending an approved write, the write may have gone out.</dd>
       <dt>What the person saw</dt><dd>Their own action.</dd>
-      <dt>What to do</dt><dd>Treat it as a cancel. Nothing was signed.</dd>
-      <dt>Safe to try again</dt><dd>Yes.</dd>
+      <dt>What to do</dt><dd>Treat it as a cancel. If the call was a write, read the chain before you offer to send it again.</dd>
+      <dt>Safe to try again</dt><dd>For connect and sign, yes. For a write, after checking the chain.</dd>
     </dl>
   </section>
   <section class="error-entry" id="Declined" aria-labelledby="Declined-title">
@@ -82,7 +83,7 @@
     <p>The wallet uses another account now.</p>
     <dl>
       <dt>Why</dt><dd>The <code>account</code> you passed isn't the wallet's account any more: the person switched accounts, or signed in with another passkey.</dd>
-      <dt>What the person saw</dt><dd>Nothing, for this request.</dd>
+      <dt>What the person saw</dt><dd>Selfhold's window opens and closes at once, or first asks them to sign in if this browser has no account.</dd>
       <dt>What to do</dt><dd>Nothing was sent. Read <code>wallet.address()</code> again, redraw your page for that account, and rebuild the write.</dd>
       <dt>Safe to try again</dt><dd>After you rebuild it.</dd>
     </dl>

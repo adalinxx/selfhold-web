@@ -29,7 +29,7 @@
   <h2 id="chain">A chain to write to</h2>
   <p>Writes go to a real Lattice chain. To develop without touching one people use, run a node on your computer that hosts a chain of your own, and pass its address as a host:</p>
   <pre tabindex="0" role="region" aria-label="Example: a node on this computer"><code>const wallet = selfhold({ hosts: () =&gt; [&quot;http://127.0.0.1:8080&quot;] });</code></pre>
-  <p>See <a href="https://lattice.build/">lattice.build ↗</a> for running a node. To test coin-free writes, run <a href="https://github.com/0xLattice/lattice-sponsor">lattice-sponsor ↗</a> beside it and pass it as <code>sponsor</code>.</p>
+  <p>Selfhold's window, at https://wallet.selfhold.app, reads and sends to that node from the browser. So the node must allow requests from that origin, and your browser may ask you to allow the page to reach devices on your local network. See <a href="https://lattice.build/">lattice.build ↗</a> for running a node. To test coin-free writes, run <a href="https://github.com/0xLattice/lattice-sponsor">lattice-sponsor ↗</a> beside it and pass it as <code>sponsor</code>.</p>
 
   <h2 id="playwright">End-to-end tests with Playwright</h2>
   <p>Chromium's virtual authenticator stands in for the person's passkey, so a test can make an account and approve requests with no one there. Three things matter:</p>

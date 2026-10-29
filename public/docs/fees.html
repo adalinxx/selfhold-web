@@ -20,12 +20,12 @@
 <main id="main" class="docs">
   <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
   <h1>Pay fees with work</h1>
-  <p class="lead-docs">Every Lattice transaction pays a fee to the miner who records it. With a fee sponsor, your app lets people pay that fee with a few seconds of their device's work instead of coins. A new account can write at once.</p>
+  <p class="lead-docs">Every Lattice transaction pays a fee to the miner who records it. With a fee sponsor, your app lets people pay that fee with their device's work instead of coins. A new account can write at once.</p>
 
   <h2 id="how">How it works</h2>
   <p>A fee sponsor is a miner that runs beside a node. It trades work for fees:</p>
   <ol class="docs-steps">
-    <li><strong>The device mines.</strong> Selfhold's window asks the sponsor for work. The person's device (its GPU, or its processor where there's no GPU) grinds shares of the sponsor's next block: about 17 million hashes, a few seconds on a GPU.</li>
+    <li><strong>The device mines.</strong> Selfhold's window asks the sponsor for work. The person's device (its GPU, or its processor where there's no GPU) grinds shares of the sponsor's next block. A share is about 17 million hashes by default, and a fee takes as many shares as the sponsor asks. The window shows its progress, and stops at about 2 minutes.</li>
     <li><strong>Each share is a real chance at a block.</strong> The sponsor's block template pays it on Nexus and on every chain its node hosts. If a share wins, the sponsor earns that block's reward and fees.</li>
     <li><strong>The sponsor credits the person.</strong> Each accepted share is worth its chance of winning times the block's reward, on the chain the write goes to.</li>
     <li><strong>The sponsor pays the fee from that credit.</strong> It adds a debit of the fee from its own account to the person's transaction, and co-signs it.</li>
@@ -43,18 +43,20 @@
 
   <h2 id="use">Use it</h2>
   <pre tabindex="0" role="region" aria-label="Example: give selfhold() your sponsor"><code>const wallet = selfhold({
-  sponsor: () =&gt; &quot;https://sponsor.your-app.example/sponsor&quot;,
+  sponsor: () =&gt; &quot;https://sponsor.your-app.example&quot;,
   hosts: () =&gt; [&quot;https://node.your-app.example&quot;],
 });</code></pre>
+  <p>The URL is the sponsor's base: the window calls its routes under it (<code>/work</code>, <code>/shares</code> and <code>/sponsor</code>). If you serve the sponsor under a path, such as <code>https://your-app.example/sponsor</code>, give that path. The window, at https://wallet.selfhold.app, calls it from the person's browser, so the sponsor must allow requests from that origin.</p>
   <p>Selfhold's window shows the person the fee, and that their device pays it with work. While it works, the window shows its progress, and <code>progress</code> hears it.</p>
 
   <h2 id="limits">When work can't pay</h2>
+  <p>Selfhold's window falls back to the account's coins when it has them. If it doesn't, the write fails with <a href="errors.html#NeedsCoins"><code>NeedsCoins</code></a>, and its <code>sponsor</code> says why work couldn't pay:</p>
   <ul>
-    <li><strong>The sponsor is down</strong>, or busy: if the account has the coins, the window pays the fee from them. Otherwise the write fails with <a href="errors.html#NeedsCoins"><code>NeedsCoins</code></a>, and <code>sponsor</code> is <code>"down"</code>.</li>
-    <li><strong>Too much work</strong>: the window won't grind for more than about 2 minutes. A write that would take longer fails with <code>NeedsCoins</code>, and <code>sponsor</code> is <code>"dear"</code>.</li>
-    <li><strong>A payment the sponsor won't cover</strong>: a sponsor can also pay part of a payment for work, up to a limit. Beyond it, <code>sponsor</code> is <code>"most"</code>.</li>
-    <li><strong>Selfhold for Chrome</strong> pays fees from the account's coins: it doesn't do work.</li>
+    <li><code>"down"</code>: <strong>the sponsor didn't pay</strong>: it isn't answering, is busy, or takes no work now. Trying again in a few minutes may work.</li>
+    <li><code>"dear"</code>: <strong>too much work</strong>. The window won't work for more than about 2 minutes on this device.</li>
+    <li><code>"most"</code>: <strong>a payment over the sponsor's limit</strong>. A sponsor can also pay part of a payment for work, up to its limit.</li>
   </ul>
+  <p>Selfhold for Chrome doesn't use a sponsor: it pays fees from the account's coins.</p>
   <p>Without a sponsor, the account pays each fee from its coins: the window shows how much before the person approves.</p>
 
   <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../docs/write.html"><span>Previous</span>Write records and wait for them to land</a><a class="next" href="../docs/errors.html"><span>Next</span>Errors</a></nav>

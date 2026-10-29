@@ -33,15 +33,16 @@
   <section class="ref-entry" id="selfhold" aria-labelledby="selfhold-title">
     <h3 id="selfhold-title"><code>selfhold(options?: Options): Wallet</code></h3>
     <p>Makes a wallet object. It opens nothing and asks nothing until you call it.</p>
-    <div class="table"><table><thead><tr><th>Parameter</th><th>Type</th><th></th></tr></thead><tbody><tr><td><code>options.use</code></td><td><code>&quot;auto&quot; | &quot;window&quot; | &quot;extension&quot;</code></td><td>Which wallet. Default <code>"auto"</code>: Selfhold for Chrome where it's installed, else Selfhold's window.</td></tr><tr><td><code>options.hosts</code></td><td><code>() =&gt; string[] | Promise&lt;string[]&gt;</code></td><td>The hosts a write is sent to and a wait reads from. Default: the hosts Nexus lists for the write's chain.</td></tr><tr><td><code>options.sponsor</code></td><td><code>() =&gt; string | Promise&lt;string&gt;</code></td><td>A fee sponsor's URL, or <code>""</code> for none. Default: none. See <a href="fees.html">Pay fees with work</a>.</td></tr><tr><td><code>options.wallet</code></td><td><code>string</code></td><td>The window's page. Default <code>https://wallet.selfhold.app/</code>. Tests point it at a local copy.</td></tr></tbody></table></div>
+    <div class="table"><table><thead><tr><th>Parameter</th><th>Type</th><th></th></tr></thead><tbody><tr><td><code>options.use</code></td><td><code>&quot;auto&quot; | &quot;window&quot; | &quot;extension&quot;</code></td><td>Which wallet. Default <code>"auto"</code>: Selfhold for Chrome where it's installed, else Selfhold's window.</td></tr><tr><td><code>options.hosts</code></td><td><code>() =&gt; string[] | Promise&lt;string[]&gt;</code></td><td>The hosts Selfhold's window sends a write to, and a wait reads from. Default: the hosts Nexus lists for the write's chain. Selfhold for Chrome sends through the node the person chose in it.</td></tr><tr><td><code>options.sponsor</code></td><td><code>() =&gt; string | Promise&lt;string&gt;</code></td><td>A fee sponsor's base URL, or <code>""</code> for none. Default: none. Selfhold's window only. See <a href="fees.html#use">Pay fees with work</a>.</td></tr><tr><td><code>options.wallet</code></td><td><code>string</code></td><td>The window's page. Default <code>https://wallet.selfhold.app/</code>. Tests point it at a local copy.</td></tr></tbody></table></div>
     <p><strong>Returns</strong> a <code>Wallet</code>.</p>
-    <pre tabindex="0" role="region" aria-label="Example: selfhold(options?: Options): Wallet"><code>const wallet = selfhold({ sponsor: () =&gt; &quot;https://sponsor.your-app.example/sponsor&quot; });</code></pre>
+    <pre tabindex="0" role="region" aria-label="Example: selfhold(options?: Options): Wallet"><code>const wallet = selfhold({ sponsor: () =&gt; &quot;https://sponsor.your-app.example&quot; });</code></pre>
   </section>
 
   <h2 id="wallet">The wallet</h2>
   <section class="ref-entry" id="kind" aria-labelledby="kind-title">
     <h3 id="kind-title"><code>wallet.kind: &quot;extension&quot; | &quot;window&quot;</code></h3>
     <p>Which wallet is in use right now. Selfhold for Chrome can reach the page after your script starts, so read it when you need it.</p>
+    <p>Made with <code>use: "extension"</code> where Selfhold for Chrome isn't installed, reading <code>kind</code> throws <a href="errors.html#NoWallet"><code>NoWallet</code></a>, as do <code>address()</code> and <code>disconnect()</code>.</p>
   </section>
   <section class="ref-entry" id="connect" aria-labelledby="connect-title">
     <h3 id="connect-title"><code>wallet.connect(): Promise&lt;string&gt;</code></h3>
@@ -53,6 +54,7 @@
     <h3 id="address-title"><code>wallet.address(): Promise&lt;string | null&gt;</code></h3>
     <p>The address this site was given. It never asks the person and never opens a window.</p>
     <p><strong>Returns</strong> the address, or <code>null</code> if the site has none.</p>
+    <p><strong>Throws</strong> <a href="errors.html#NoWallet"><code>NoWallet</code></a>, only with <code>use: "extension"</code> and no extension.</p>
   </section>
   <section class="ref-entry" id="disconnect" aria-labelledby="disconnect-title">
     <h3 id="disconnect-title"><code>wallet.disconnect(): Promise&lt;void&gt;</code></h3>

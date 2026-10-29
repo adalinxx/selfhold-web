@@ -99,7 +99,8 @@ status.textContent = &quot;Saved.&quot;;</code></pre>
 
   <h3 id="check">Decide "landed" from your own state</h3>
   <p>By default, <code>wait()</code> reads the account's nonce at the host the write went to and at your <code>hosts</code>, and calls the write landed once the nonce has passed it. That can't tell this write from another the same account signed elsewhere at the same nonce. Where that matters, pass a <code>check</code>:</p>
-  <pre tabindex="0" role="region" aria-label="Example: a check from your own state"><code>await sent.wait({
+  <pre tabindex="0" role="region" aria-label="Example: a check from your own state"><code>// previous: the bio as you read it when you built the write.
+await sent.wait({
   check: async () =&gt; {
     const bio = await readRecord(&quot;profile/bio&quot;);
     if (bio === &quot;Hello&quot;) return true;           // landed

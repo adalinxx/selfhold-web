@@ -37,7 +37,8 @@ render(address ? signedIn(address) : signedOut());</code></pre>
   <h2 id="which">Which wallet</h2>
   <p>By default the library uses Selfhold for Chrome where it's installed, and Selfhold's window everywhere else. To choose:</p>
   <pre tabindex="0" role="region" aria-label="Example: choose a wallet"><code>const wallet = selfhold({ use: &quot;window&quot; });    // always Selfhold&#x27;s window
-const chrome = selfhold({ use: &quot;extension&quot; }); // only Selfhold for Chrome; NoWallet if it isn&#x27;t installed</code></pre>
+const chrome = selfhold({ use: &quot;extension&quot; }); // only Selfhold for Chrome</code></pre>
+  <p>Where Selfhold for Chrome isn't installed, every call on <code>chrome</code>, and reading <code>chrome.kind</code>, throws <a href="errors.html#NoWallet"><code>NoWallet</code></a>. Check <code>window.lattice</code> first, or use the default.</p>
   <p>Selfhold for Chrome can reach your page after your script starts. If your page offers the choice, read <code>wallet.kind</code> when you render rather than once at load, or listen for the extension's <code>lattice#initialized</code> event on <code>window</code>.</p>
 
   <h2 id="changes">When the account changes</h2>
