@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Develop on localhost, and drive Selfhold&#x27;s window in Playwright with a virtual passkey.">
+  <meta name="theme-color" content="#101112">
+  <title>Test your integration · Selfhold for developers</title>
+  <link rel="icon" href="../assets/selfhold-icon-32.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+  <a class="brand" href="../index.html" aria-label="Selfhold home"><img src="../assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
+  <nav aria-label="Main navigation"><a class="nav-text" href="../developers.html">Developers</a><a class="nav-text" href="../docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+</header>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="../developers.html">Quickstart</a></li><li><a href="../docs/how-it-works.html">How Selfhold works</a></li><li><a href="../docs/connect.html">Connect an account</a></li><li><a href="../docs/write.html">Write and wait</a></li><li><a href="../docs/fees.html">Pay fees with work</a></li><li><a href="../docs/errors.html">Errors</a></li><li><a href="../docs/testing.html" aria-current="page">Test your integration</a></li><li><a href="../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../docs/reference.html">API reference</a></li><li><a href="../docs/versions.html">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>Test your integration</h1>
+  <p class="lead-docs">Develop on localhost against the real Selfhold window, and test end to end with a browser's virtual passkey.</p>
+
+  <h2 id="localhost">Develop on localhost</h2>
+  <p>Selfhold's window takes calls from <code>http://localhost</code> and <code>http://127.0.0.1</code>, on any port, as well as from https sites. It shows them to the person as "a site on this computer". Any other http site is ignored.</p>
+  <p>The account you make while developing is a real Selfhold account, with a real passkey. Use a separate browser profile for it if you'd rather keep it apart from your own.</p>
+
+  <h2 id="chain">A chain to write to</h2>
+  <p>Writes go to a real Lattice chain. To develop without touching one people use, run a node on your computer that hosts a chain of your own, and pass its address as a host:</p>
+  <pre tabindex="0" role="region" aria-label="Example: a node on this computer"><code>const wallet = selfhold({ hosts: () =&gt; [&quot;http://127.0.0.1:8080&quot;] });</code></pre>
+  <p>Selfhold's window, at https://wallet.selfhold.app, reads and sends to that node from the browser. So the node must allow requests from that origin, and your browser may ask you to allow the page to reach devices on your local network. See <a href="https://lattice.build/">lattice.build ↗</a> for running a node. To test coin-free writes, run <a href="https://github.com/0xLattice/lattice-sponsor">lattice-sponsor ↗</a> beside it and pass it as <code>sponsor</code>.</p>
+
+  <h2 id="playwright">End-to-end tests with Playwright</h2>
+  <p>Chromium's virtual authenticator stands in for the person's passkey, so a test can make an account and approve requests with no one there. Three things matter:</p>
+  <ul>
+    <li><strong>A passkey belongs to one window's authenticator.</strong> The library opens a window for each request, and the window closes when it's done. In a test, keep it open and give every request the same one.</li>
+    <li><strong>The window's buttons wake only once it has focus.</strong> Bring it to the front before pressing them.</li>
+    <li><strong>The authenticator needs PRF</strong> (<code>hasPrf: true</code>): the account's key is derived from it.</li>
+  </ul>
+  <p>This helper does all three. Save it as <code>selfhold-passkeys.js</code>:</p>
+  <pre tabindex="0" role="region" aria-label="Example: a passkey for each Selfhold window"><code>// A virtual passkey for Selfhold&#x27;s window in a test. A passkey belongs to one window&#x27;s
+// authenticator, so every request opens in the same window, and the window stays open.
+export async function passkeys(context, wallet = &quot;wallet.selfhold.app&quot;) {
+  await context.addInitScript((wallet) =&gt; {
+    if (location.host === wallet) window.close = () =&gt; {};
+    // A new address each time, so the window loads the new request.
+    const open = window.open.bind(window);
+    window.open = (url, _name, features) =&gt; {
+      const to = new URL(url);
+      to.searchParams.set(&quot;request&quot;, String(Date.now()));
+      return open(to.href, &quot;selfhold-test&quot;, features);
+    };
+  }, wallet);
+  let selfhold = null;
+  return async function window(press) {
+    const opened = selfhold ? selfhold.waitForEvent(&quot;load&quot;) : context.waitForEvent(&quot;page&quot;);
+    await press();
+    const page = await opened;
+    if (!selfhold) {
+      selfhold = page;
+      const cdp = await context.newCDPSession(selfhold);
+      await cdp.send(&quot;WebAuthn.enable&quot;);
+      await cdp.send(&quot;WebAuthn.addVirtualAuthenticator&quot;, {
+        options: { protocol: &quot;ctap2&quot;, transport: &quot;internal&quot;, hasResidentKey: true, hasUserVerification: true,
+          isUserVerified: true, hasPrf: true, automaticPresenceSimulation: true },
+      });
+    }
+    // Its buttons wake only once the window has focus.
+    await selfhold.bringToFront();
+    return selfhold;
+  };
+}</code></pre>
+  <p>Then a test presses your page's buttons through it, and Selfhold's:</p>
+  <pre tabindex="0" role="region" aria-label="Example: a Playwright test"><code>import { test, expect } from &quot;@playwright/test&quot;;
+import { passkeys } from &quot;./selfhold-passkeys.js&quot;;
+
+test(&quot;a visitor connects and signs with Selfhold&quot;, async ({ page, context }) =&gt; {
+  const window = await passkeys(context);
+  await page.goto(&quot;http://localhost:8000/&quot;);
+
+  let selfhold = await window(() =&gt; page.getByRole(&quot;button&quot;, { name: &quot;Connect&quot; }).click());
+  await selfhold.getByRole(&quot;button&quot;, { name: &quot;Create an account&quot; }).click();
+  await selfhold.getByRole(&quot;button&quot;, { name: &quot;Connect&quot;, exact: true }).click();
+  await expect(page.getByText(/^Connected: /)).toBeVisible();
+
+  selfhold = await window(() =&gt; page.getByRole(&quot;button&quot;, { name: &quot;Sign a message&quot; }).click());
+  await selfhold.getByRole(&quot;button&quot;, { name: &quot;Sign with your passkey&quot; }).click();
+  await expect(page.getByText(/^Signed: /)).toBeVisible();
+});</code></pre>
+  <p>To approve a write, press <strong>Approve with your passkey</strong> in the window; to decline, <strong>Decline</strong>. The helper brings the window to the front for you.</p>
+
+  <h2 id="unit">Unit tests</h2>
+  <p>In unit tests, stand in for the wallet object: it's a plain object with <code>kind</code>, <code>connect</code>, <code>address</code>, <code>disconnect</code>, <code>writeRecords</code> and <code>signMessage</code>. Throw <code>new SelfholdError("Declined", "…")</code> (exported by the library) to test each failure your page handles.</p>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../docs/errors.html"><span>Previous</span>Errors</a><a class="next" href="../docs/troubleshooting.html"><span>Next</span>Troubleshooting</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+Test+your+integration&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdocs%2Ftesting.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
+</main>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="../index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="../privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</body>
+</html>

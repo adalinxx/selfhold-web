@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Every export of @selfhold/web.">
+  <meta name="theme-color" content="#101112">
+  <title>API reference · Selfhold for developers</title>
+  <link rel="icon" href="../assets/selfhold-icon-32.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+  <a class="brand" href="../index.html" aria-label="Selfhold home"><img src="../assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
+  <nav aria-label="Main navigation"><a class="nav-text" href="../developers.html">Developers</a><a class="nav-text" href="../docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+</header>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="../developers.html">Quickstart</a></li><li><a href="../docs/how-it-works.html">How Selfhold works</a></li><li><a href="../docs/connect.html">Connect an account</a></li><li><a href="../docs/write.html">Write and wait</a></li><li><a href="../docs/fees.html">Pay fees with work</a></li><li><a href="../docs/errors.html">Errors</a></li><li><a href="../docs/testing.html">Test your integration</a></li><li><a href="../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../docs/reference.html" aria-current="page">API reference</a></li><li><a href="../docs/versions.html">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>API reference</h1>
+  <p class="lead-docs">Everything <code>@selfhold/web</code> exports. Types are TypeScript; the library ships its own declarations.</p>
+  <nav class="on-page" aria-label="On this page"><ul>
+    <li><a href="#selfhold"><code>selfhold()</code></a></li>
+    <li><a href="#wallet">The wallet</a>: <a href="#kind"><code>kind</code></a>, <a href="#connect"><code>connect</code></a>, <a href="#address"><code>address</code></a>, <a href="#disconnect"><code>disconnect</code></a>, <a href="#writeRecords"><code>writeRecords</code></a>, <a href="#signMessage"><code>signMessage</code></a></li>
+    <li><a href="#sent"><code>Sent</code></a>: <a href="#wait"><code>wait</code></a>, <a href="#checkNow"><code>checkNow</code></a></li>
+    <li><a href="#errors">Errors</a>: <a href="#SelfholdError"><code>SelfholdError</code></a>, <a href="#NeedsCoins"><code>NeedsCoins</code></a>, <a href="#asSelfholdError"><code>asSelfholdError</code></a></li>
+    <li><a href="#constants">Constants</a></li>
+  </ul></nav>
+
+  <h2 id="factory">Making a wallet</h2>
+  <section class="ref-entry" id="selfhold" aria-labelledby="selfhold-title">
+    <h3 id="selfhold-title"><code>selfhold(options?: Options): Wallet</code></h3>
+    <p>Makes a wallet object. It opens nothing and asks nothing until you call it.</p>
+    <div class="table"><table><thead><tr><th>Parameter</th><th>Type</th><th></th></tr></thead><tbody><tr><td><code>options.use</code></td><td><code>&quot;auto&quot; | &quot;window&quot; | &quot;extension&quot;</code></td><td>Which wallet. Default <code>"auto"</code>: Selfhold for Chrome where it's installed, else Selfhold's window.</td></tr><tr><td><code>options.hosts</code></td><td><code>() =&gt; string[] | Promise&lt;string[]&gt;</code></td><td>The hosts Selfhold's window sends a write to, and a wait reads from. Default: the hosts Nexus lists for the write's chain. Selfhold for Chrome sends through the node the person chose in it.</td></tr><tr><td><code>options.sponsor</code></td><td><code>() =&gt; string | Promise&lt;string&gt;</code></td><td>A fee sponsor's base URL, or <code>""</code> for none. Default: none. Selfhold's window only. See <a href="fees.html#use">Pay fees with work</a>.</td></tr><tr><td><code>options.wallet</code></td><td><code>string</code></td><td>The window's page. Default <code>https://wallet.selfhold.app/</code>. Tests point it at a local copy.</td></tr></tbody></table></div>
+    <p><strong>Returns</strong> a <code>Wallet</code>.</p>
+    <pre tabindex="0" role="region" aria-label="Example: selfhold(options?: Options): Wallet"><code>const wallet = selfhold({ sponsor: () =&gt; &quot;https://sponsor.your-app.example&quot; });</code></pre>
+  </section>
+
+  <h2 id="wallet">The wallet</h2>
+  <section class="ref-entry" id="kind" aria-labelledby="kind-title">
+    <h3 id="kind-title"><code>wallet.kind: &quot;extension&quot; | &quot;window&quot;</code></h3>
+    <p>Which wallet is in use right now. Selfhold for Chrome can reach the page after your script starts, so read it when you need it.</p>
+    <p>Made with <code>use: "extension"</code> where Selfhold for Chrome isn't installed, reading <code>kind</code> throws <a href="errors.html#NoWallet"><code>NoWallet</code></a>, as do <code>address()</code> and <code>disconnect()</code>.</p>
+  </section>
+  <section class="ref-entry" id="connect" aria-labelledby="connect-title">
+    <h3 id="connect-title"><code>wallet.connect(): Promise&lt;string&gt;</code></h3>
+    <p>Asks the person to connect their account to your site. Call it from a click.</p>
+    <p><strong>Returns</strong> the account's address.</p>
+    <p><strong>Throws</strong> <code>SelfholdError</code>: <a href="errors.html#PopupBlocked">PopupBlocked</a>, <a href="errors.html#Closed">Closed</a>, <a href="errors.html#Declined">Declined</a>, <a href="errors.html#Reloaded">Reloaded</a>, <a href="errors.html#NoWallet">NoWallet</a>, <a href="errors.html#Failed">Failed</a>.</p>
+  </section>
+  <section class="ref-entry" id="address" aria-labelledby="address-title">
+    <h3 id="address-title"><code>wallet.address(): Promise&lt;string | null&gt;</code></h3>
+    <p>The address this site was given. It never asks the person and never opens a window.</p>
+    <p><strong>Returns</strong> the address, or <code>null</code> if the site has none.</p>
+    <p><strong>Throws</strong> <a href="errors.html#NoWallet"><code>NoWallet</code></a>, only with <code>use: "extension"</code> and no extension.</p>
+  </section>
+  <section class="ref-entry" id="disconnect" aria-labelledby="disconnect-title">
+    <h3 id="disconnect-title"><code>wallet.disconnect(): Promise&lt;void&gt;</code></h3>
+    <p>Forgets the address on your site. With Selfhold for Chrome, the extension forgets your site too.</p>
+  </section>
+  <section class="ref-entry" id="writeRecords" aria-labelledby="writeRecords-title">
+    <h3 id="writeRecords-title"><code>wallet.writeRecords(request, options?): Promise&lt;Sent | null&gt;</code></h3>
+    <p>Writes records on one chain, and pays addresses from the account in the same transaction, once the person approves. Call it from a click.</p>
+    <div class="table"><table><thead><tr><th>Parameter</th><th>Type</th><th></th></tr></thead><tbody><tr><td><code>request</code></td><td><code>WriteRequest | Promise&lt;WriteRequest | null&gt;</code></td><td>The write, or a promise of it. Resolving to <code>null</code> sends nothing.</td></tr><tr><td><code>request.chainPath</code></td><td><code>string[]</code></td><td>The chain, such as <code>["Nexus", "your-chain"]</code>.</td></tr><tr><td><code>request.actions</code></td><td><code>{ key: string; oldValue?: string; newValue?: string }[]</code></td><td>The records to add, change or delete. See <a href="write.html#actions">Actions</a>.</td></tr><tr><td><code>request.payments</code></td><td><code>{ to: string; amount: string }[]</code></td><td>Optional. Addresses to pay, in whole coins.</td></tr><tr><td><code>request.fee</code></td><td><code>string</code></td><td>Optional. The fee to pay. Default: the wallet sets it from what the node asks.</td></tr><tr><td><code>options.account</code></td><td><code>string</code></td><td>The address you built the write for. If the wallet's is another, nothing is sent.</td></tr><tr><td><code>options.progress</code></td><td><code>(text: string) =&gt; void</code></td><td>Hears what Selfhold's window is doing.</td></tr></tbody></table></div>
+    <p><strong>Returns</strong> a <code>Sent</code>, or <code>null</code> if the request resolved to <code>null</code>.</p>
+    <p><strong>Throws</strong> <code>SelfholdError</code>: PopupBlocked, Closed, Declined, Reloaded, <a href="errors.html#AccountChanged">AccountChanged</a>, <a href="errors.html#NotConnected">NotConnected</a>, NoWallet, Failed; or a <a href="#NeedsCoins"><code>NeedsCoins</code></a>.</p>
+  </section>
+  <section class="ref-entry" id="signMessage" aria-labelledby="signMessage-title">
+    <h3 id="signMessage-title"><code>wallet.signMessage({ text }): Promise&lt;{ publicKey: string; signature: string }&gt;</code></h3>
+    <p>Signs text, once the person approves. The signed bytes are <code>"lattice-message:" + your origin + "\n" + text</code>, so a signature for one site can't be used as another's. Call it from a click.</p>
+    <p><strong>Returns</strong> the account's public key and the signature.</p>
+    <p><strong>Throws</strong> <code>SelfholdError</code>: PopupBlocked, Closed, Declined, Reloaded, AccountChanged, NoWallet, Failed.</p>
+  </section>
+
+  <h2 id="sent"><code>Sent</code></h2>
+  <p>What <code>writeRecords()</code> resolves with: a write that is signed and taken by a node.</p>
+  <div class="table"><table><thead><tr><th>Property</th><th>Type</th><th></th></tr></thead><tbody>
+    <tr><td><code>transactionCID</code></td><td><code>string</code></td><td>The transaction's ID.</td></tr>
+    <tr><td><code>account</code></td><td><code>string</code></td><td>The account that signed it.</td></tr>
+    <tr><td><code>chainPath</code></td><td><code>string[]</code></td><td>Its chain.</td></tr>
+    <tr><td><code>nonce</code></td><td><code>string | undefined</code></td><td>Its nonce, where the wallet says it.</td></tr>
+    <tr><td><code>host</code></td><td><code>string | undefined</code></td><td>The host it went to, where the wallet says it. Selfhold for Chrome gives only a public https host, never the person's own node.</td></tr>
+  </tbody></table></div>
+  <section class="ref-entry" id="wait" aria-labelledby="wait-title">
+    <h3 id="wait-title"><code>sent.wait(options?: WaitOptions): Promise&lt;void&gt;</code></h3>
+    <p>Resolves once the write lands. See <a href="write.html#wait">Wait for it to land</a>.</p>
+    <div class="table"><table><thead><tr><th>Parameter</th><th>Type</th><th></th></tr></thead><tbody><tr><td><code>options.onChange</code></td><td><code>(state: &quot;sent&quot; | &quot;slow&quot; | &quot;late&quot;) =&gt; void</code></td><td>Hears each new state, from <code>"sent"</code>.</td></tr><tr><td><code>options.check</code></td><td><code>() =&gt; Promise&lt;boolean | string&gt;</code></td><td>Decides from your own state: <code>true</code> landed, <code>false</code> not yet, a string when another write took its place. Default: the account's nonce has passed the write's.</td></tr><tr><td><code>options.signal</code></td><td><code>AbortSignal</code></td><td>Stops waiting; <code>wait()</code> rejects with its reason.</td></tr></tbody></table></div>
+    <p><strong>Throws</strong> <code>SelfholdError</code>: <a href="errors.html#Lost">Lost</a>, <a href="errors.html#NotRecorded">NotRecorded</a>; <a href="errors.html#Failed">Failed</a> if there is no host to read and no <code>check</code>.</p>
+  </section>
+  <section class="ref-entry" id="checkNow" aria-labelledby="checkNow-title">
+    <h3 id="checkNow-title"><code>sent.checkNow(): void</code></h3>
+    <p>Reads at once instead of at the next turn: a “Check again” for a late write.</p>
+  </section>
+
+  <h2 id="errors">Errors</h2>
+  <section class="ref-entry" id="SelfholdError" aria-labelledby="SelfholdError-title">
+    <h3 id="SelfholdError-title"><code>class SelfholdError extends Error</code></h3>
+    <p>Every failure. <code>code</code>: one of the <a href="errors.html#codes">codes</a>. <code>message</code>: written for the person. <code>docUrl</code>: this code's entry in <a href="errors.html">Errors</a>.</p>
+    <p>Construct one with <code>new SelfholdError(code, message)</code>, for example in tests.</p>
+  </section>
+  <section class="ref-entry" id="NeedsCoins" aria-labelledby="NeedsCoins-title">
+    <h3 id="NeedsCoins-title"><code>class NeedsCoins extends SelfholdError</code></h3>
+    <p>The account can't pay for the write. Its <code>code</code> is <code>"NeedsCoins"</code>. <code>address</code>: the account. <code>needed</code>, <code>balance</code>: bigints, in coins. <code>sponsor</code>: why the fee sponsor didn't pay, <code>"down"</code>, <code>"dear"</code> or <code>"most"</code>, or <code>null</code> if none was asked.</p>
+  </section>
+  <section class="ref-entry" id="asSelfholdError" aria-labelledby="asSelfholdError-title">
+    <h3 id="asSelfholdError-title"><code>asSelfholdError(error: unknown): SelfholdError</code></h3>
+    <p>Turns any failure into a <code>SelfholdError</code>: itself if it is one, else coded from the wallet's own code or words, else <code>Failed</code>.</p>
+  </section>
+
+  <h2 id="constants">Constants</h2>
+  <dl class="api">
+    <dt><code>TIMES</code></dt><dd>The wait's timings, in milliseconds: <code>slow</code> 30 000, <code>late</code> 300 000, <code>giveUp</code> 1 800 000, <code>every</code> 2 500 (how often it reads), <code>everyLate</code> 15 000, <code>read</code> 20 000 (how long one read may take).</dd>
+    <dt><code>PROTOCOL</code></dt><dd>The version of the messages between the library and Selfhold's window: <code>1</code>.</dd>
+    <dt><code>ERRORS_URL</code></dt><dd>Where error codes are explained: <code>https://selfhold.app/docs/errors.html</code>.</dd>
+  </dl>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../docs/troubleshooting.html"><span>Previous</span>Troubleshooting</a><a class="next" href="../docs/versions.html"><span>Next</span>Versions and changes</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+API+reference&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdocs%2Freference.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
+</main>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="../index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="../privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</body>
+</html>

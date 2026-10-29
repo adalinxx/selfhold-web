@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Build a write, send it, and show the person where it is until it lands.">
+  <meta name="theme-color" content="#101112">
+  <title>Write records and wait for them to land · Selfhold for developers</title>
+  <link rel="icon" href="../assets/selfhold-icon-32.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+  <a class="brand" href="../index.html" aria-label="Selfhold home"><img src="../assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
+  <nav aria-label="Main navigation"><a class="nav-text" href="../developers.html">Developers</a><a class="nav-text" href="../docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+</header>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="../developers.html">Quickstart</a></li><li><a href="../docs/how-it-works.html">How Selfhold works</a></li><li><a href="../docs/connect.html">Connect an account</a></li><li><a href="../docs/write.html" aria-current="page">Write and wait</a></li><li><a href="../docs/fees.html">Pay fees with work</a></li><li><a href="../docs/errors.html">Errors</a></li><li><a href="../docs/testing.html">Test your integration</a></li><li><a href="../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../docs/reference.html">API reference</a></li><li><a href="../docs/versions.html">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>Write records and wait for them to land</h1>
+  <p class="lead-docs">A write changes records on one chain, and can pay addresses in the same transaction. The person approves it in Selfhold; then the chain records it, usually within seconds.</p>
+
+  <h2 id="send">Send a write</h2>
+  <pre tabindex="0" role="region" aria-label="Example: send a write and wait"><code>button.onclick = async () =&gt; {
+  const sent = await wallet.writeRecords({
+    chainPath: [&quot;Nexus&quot;, &quot;your-chain&quot;],
+    actions: [{ key: &quot;profile/bio&quot;, newValue: &quot;Hello&quot; }],
+  }, { account: address });
+  if (!sent) return; // nothing to send: see below
+  await sent.wait();
+};</code></pre>
+
+  <h3 id="actions">Actions</h3>
+  <p>Each action is a compare-and-swap on one key. The chain refuses the whole write if any action doesn't match what it holds:</p>
+  <div class="table"><table>
+    <thead><tr><th>To</th><th>Write</th><th>Refused if</th></tr></thead>
+    <tbody>
+      <tr><td>Add a key</td><td><code>{ key, newValue }</code></td><td>the key exists</td></tr>
+      <tr><td>Change a key</td><td><code>{ key, oldValue, newValue }</code></td><td>the key doesn't hold <code>oldValue</code></td></tr>
+      <tr><td>Delete a key</td><td><code>{ key, oldValue }</code></td><td>the key doesn't hold <code>oldValue</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>So read the current values just before you build the write. A chain may also have its own rules for which records it accepts.</p>
+
+  <h3 id="payments">Payments</h3>
+  <p>Add <code>payments: [{ to, amount }]</code> to pay addresses from the account in the same transaction. Amounts are strings of whole coins, such as <code>"100"</code>. Selfhold shows the person every payment before they approve, and warns about any address that no record in the write names.</p>
+
+  <h3 id="read-first">Read first, without losing the click</h3>
+  <p>If you need to read the chain to build the write, pass a promise. The window opens at once, in the click, and waits for it:</p>
+  <pre tabindex="0" role="region" aria-label="Example: pass the write as a promise"><code>button.onclick = () =&gt; wallet.writeRecords(readState().then(buildWrite), { account: address });</code></pre>
+  <p>Resolve it to <code>null</code> when there's nothing to change: the window closes and <code>writeRecords()</code> resolves to <code>null</code>.</p>
+
+  <h3 id="progress">Progress</h3>
+  <p>Selfhold's window tells you what it's doing, such as paying the fee with this device's work. Show it:</p>
+  <pre tabindex="0" role="region" aria-label="Example: show progress"><code>await wallet.writeRecords(request, { progress: (text) =&gt; status.textContent = text });</code></pre>
+
+  <h2 id="wait">Wait for it to land</h2>
+  <p><code>writeRecords()</code> resolves once the write is <strong>sent</strong>: signed, and taken by a node. It lands when a block records it. <code>sent.wait()</code> follows it there:</p>
+  <figure class="diagram">
+  <svg viewBox="0 0 760 150" role="img" aria-labelledby="states-title states-desc" xmlns="http://www.w3.org/2000/svg">
+    <title id="states-title">A sent write's states</title>
+    <desc id="states-desc">Sent, then slow after 30 seconds, then late after 5 minutes. From any of them it can land. After 30 minutes it ends as not recorded, and if another write took its place it ends as lost.</desc>
+    <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+    <g fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="10" y="20" width="110" height="40"/><rect x="190" y="20" width="110" height="40"/><rect x="370" y="20" width="110" height="40"/>
+      <rect x="600" y="20" width="150" height="40" stroke-width="2.5"/><rect x="600" y="95" width="150" height="40" stroke-dasharray="4 3"/>
+    </g>
+    <g stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#b)">
+      <line x1="120" y1="40" x2="186" y2="40"/><line x1="300" y1="40" x2="366" y2="40"/><line x1="480" y1="40" x2="596" y2="40"/>
+      <line x1="425" y1="60" x2="596" y2="112"/>
+    </g>
+    <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="14" fill="currentColor" text-anchor="middle">
+      <text x="65" y="45">sent</text><text x="245" y="45">slow</text><text x="425" y="45">late</text><text x="675" y="45">landed</text><text x="675" y="120">NotRecorded</text>
+    </g>
+    <g font-family="Arial, Helvetica, sans-serif" font-size="12" fill="currentColor" text-anchor="middle">
+      <text x="153" y="80">30 s</text><text x="333" y="80">5 min</text><text x="538" y="32">it lands</text><text x="500" y="118">30 min</text>
+    </g>
+  </svg>
+  <figcaption>From any state, the write can land, and <code>wait()</code> resolves. After 30 minutes it rejects with <code>NotRecorded</code>. If your <code>check</code> says another write took its place, it rejects with <code>Lost</code>.</figcaption>
+  </figure>
+  <pre tabindex="0" role="region" aria-label="Example: show each state"><code>const words = {
+  sent: &quot;Sent. Your device&#x27;s part is done. The network usually records it in about 10 seconds.&quot;,
+  slow: &quot;Taking longer than usual. It&#x27;s sent and should still go through.&quot;,
+  late: &quot;The network hasn&#x27;t recorded it yet. It may still go through.&quot;,
+};
+await sent.wait({ onChange: (state) =&gt; status.textContent = words[state] });
+status.textContent = &quot;Saved.&quot;;</code></pre>
+  <div class="table"><table>
+    <thead><tr><th>State</th><th>When</th><th>What to show</th></tr></thead>
+    <tbody>
+      <tr><td><code>sent</code></td><td>at once</td><td>The person's part is done. It usually lands in about 10 seconds. Show the change on your page as on its way, not done.</td></tr>
+      <tr><td><code>slow</code></td><td>after 30 seconds</td><td>It's taking longer than usual and should still go through. They can leave the page.</td></tr>
+      <tr><td><code>late</code></td><td>after 5 minutes</td><td>It hasn't landed yet and may still. Offer "Check again" (<code>sent.checkNow()</code>), and let them try again if they want.</td></tr>
+      <tr><td>landed</td><td><code>wait()</code> resolves</td><td>Done. Draw your page from what the chain now holds.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 id="check">Decide "landed" from your own state</h3>
+  <p>By default, <code>wait()</code> reads the account's nonce at the host the write went to and at your <code>hosts</code>, and calls the write landed once the nonce has passed it. That can't tell this write from another the same account signed elsewhere at the same nonce. Where that matters, pass a <code>check</code>:</p>
+  <pre tabindex="0" role="region" aria-label="Example: a check from your own state"><code>// previous: the bio as you read it when you built the write.
+await sent.wait({
+  check: async () =&gt; {
+    const bio = await readRecord(&quot;profile/bio&quot;);
+    if (bio === &quot;Hello&quot;) return true;           // landed
+    if (bio !== previous) return &quot;Your bio was changed somewhere else.&quot;; // another write took its place
+    return false;                               // not yet
+  },
+});</code></pre>
+  <p>Return a string when another write landed in this one's place. A host that lags can mislead one read, so <code>wait()</code> rejects with <a href="errors.html#Lost"><code>Lost</code></a> only after three reads in a row agree.</p>
+
+  <h3 id="again">Trying again safely</h3>
+  <ul>
+    <li><strong>While it's sent, slow or late, don't send it again on your own.</strong> It may still land, and a second copy would be refused or would apply twice.</li>
+    <li><strong>After <code>Lost</code></strong>, read the chain again: the person may not want the write any more. Build a new one from what the chain now holds.</li>
+    <li><strong>After <code>NotRecorded</code></strong>, the write most likely didn't go through. Read the chain first; if it's still needed, the person can send it again.</li>
+  </ul>
+  <p>To stop waiting, for example when the person leaves the page, pass an <code>AbortSignal</code> as <code>signal</code>.</p>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../docs/connect.html"><span>Previous</span>Connect an account</a><a class="next" href="../docs/fees.html"><span>Next</span>Pay fees with work</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+Write+records+and+wait+for+them+to+land&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdocs%2Fwrite.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
+</main>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="../index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="../privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</body>
+</html>

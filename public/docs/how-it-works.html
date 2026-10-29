@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The account, the window, what a site can and can&#x27;t do, and the Lattice basics a site needs.">
+  <meta name="theme-color" content="#101112">
+  <title>How Selfhold works · Selfhold for developers</title>
+  <link rel="icon" href="../assets/selfhold-icon-32.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+  <a class="brand" href="../index.html" aria-label="Selfhold home"><img src="../assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
+  <nav aria-label="Main navigation"><a class="nav-text" href="../developers.html">Developers</a><a class="nav-text" href="../docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+</header>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="../developers.html">Quickstart</a></li><li><a href="../docs/how-it-works.html" aria-current="page">How Selfhold works</a></li><li><a href="../docs/connect.html">Connect an account</a></li><li><a href="../docs/write.html">Write and wait</a></li><li><a href="../docs/fees.html">Pay fees with work</a></li><li><a href="../docs/errors.html">Errors</a></li><li><a href="../docs/testing.html">Test your integration</a></li><li><a href="../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../docs/reference.html">API reference</a></li><li><a href="../docs/versions.html">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>How Selfhold works</h1>
+  <p class="lead-docs">Selfhold is a wallet for <a href="https://lattice.build/">Lattice ↗</a>. Your site asks it for things; the person approves them in Selfhold; your site gets the answer. This page explains the parts, so you know what to expect and what to tell people.</p>
+
+  <h2 id="two-wallets">Two wallets, one library</h2>
+  <p><code>selfhold()</code> gives you one wallet object. Behind it is one of two wallets:</p>
+  <div class="table"><table>
+    <thead><tr><th></th><th>Selfhold's window</th><th>Selfhold for Chrome</th></tr></thead>
+    <tbody>
+      <tr><td>What it is</td><td>A page at wallet.selfhold.app that opens over yours, as a payment window does. On iPhone it opens as a tab.</td><td>A Chrome extension the person installed.</td></tr>
+      <tr><td>Where it works</td><td>Any current browser with passkeys, phones included.</td><td>Desktop Chrome.</td></tr>
+      <tr><td>The account</td><td>Derived from a passkey. The person's password manager keeps it and syncs it to their other devices.</td><td>Kept in the extension, protected by its password and recovery phrase.</td></tr>
+      <tr><td>Used when</td><td>Selfhold for Chrome isn't installed, or you pass <code>use: "window"</code>.</td><td>It's installed, or you pass <code>use: "extension"</code>.</td></tr>
+    </tbody>
+  </table></div>
+  <p>The two keep <strong>separate accounts</strong>. Someone with both has two addresses, so say on your page which one is connected: <code>wallet.kind</code> tells you.</p>
+
+  <h2 id="flow">What happens in a write</h2>
+  <figure class="diagram">
+<svg viewBox="0 0 760 430" role="img" aria-labelledby="flow-title flow-desc" xmlns="http://www.w3.org/2000/svg">
+  <title id="flow-title">A write through Selfhold's window</title>
+  <desc id="flow-desc">Your page opens the window in a click and sends the write. The person approves with a passkey. The window signs, sends the transaction to a node, and answers your page, which then watches the chain until it lands.</desc>
+  <g font-family="ui-monospace, SFMono-Regular, Consolas, monospace" font-size="13" fill="currentColor">
+    <text x="90" y="24" text-anchor="middle" font-weight="700">Your page</text>
+    <text x="380" y="24" text-anchor="middle" font-weight="700">Selfhold's window</text>
+    <text x="670" y="24" text-anchor="middle" font-weight="700">Lattice node</text>
+  </g>
+  <g stroke="currentColor" stroke-width="1" stroke-dasharray="3 4" opacity="0.5">
+    <line x1="90" y1="36" x2="90" y2="420"/><line x1="380" y1="36" x2="380" y2="420"/><line x1="670" y1="36" x2="670" y2="420"/>
+  </g>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+  <g stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#a)">
+    <line x1="92" y1="66" x2="376" y2="66"/>
+    <line x1="378" y1="106" x2="94" y2="106"/>
+    <line x1="92" y1="146" x2="376" y2="146"/>
+    <line x1="382" y1="226" x2="666" y2="226"/>
+    <line x1="378" y1="276" x2="94" y2="276"/>
+    <line x1="92" y1="356" x2="666" y2="356"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="13" fill="currentColor">
+    <text x="234" y="58" text-anchor="middle">1. writeRecords(): opens the window, in the click</text>
+    <text x="234" y="98" text-anchor="middle">2. ready</text>
+    <text x="234" y="138" text-anchor="middle">3. the write, the hosts and the sponsor</text>
+    <rect x="296" y="160" width="168" height="40" fill="none" stroke="currentColor"/>
+    <text x="380" y="178" text-anchor="middle">4. the person reviews,</text>
+    <text x="380" y="193" text-anchor="middle">approves with a passkey</text>
+    <text x="524" y="218" text-anchor="middle">5. signed transaction</text>
+    <text x="234" y="268" text-anchor="middle">6. Sent: its CID and nonce</text>
+    <text x="380" y="348" text-anchor="middle">7. sent.wait(): reads the account until the write lands</text>
+    <text x="380" y="400" text-anchor="middle" opacity="0.75">The key exists only inside the window, only for the request.</text>
+  </g>
+</svg>
+<figcaption>
+  <ol>
+    <li>Your page calls <code>writeRecords()</code> in a click, which opens Selfhold's window.</li>
+    <li>The window says it's ready.</li>
+    <li>Your page sends the write, and the hosts and fee sponsor to use.</li>
+    <li>The window shows the person what the write does and costs. They approve with their passkey.</li>
+    <li>The window derives the key from the passkey, signs, and sends the transaction to a node.</li>
+    <li>The window answers your page with the transaction's ID and nonce, then closes.</li>
+    <li><code>sent.wait()</code> reads the account at the node until the write lands.</li>
+  </ol>
+</figcaption>
+</figure>
+  <p>Selfhold for Chrome is similar, with differences: its own window asks, a site it's connected to isn't asked again to connect, it sends through the node the person chose in it (not your <code>hosts</code>), and it pays fees from coins (no sponsor).</p>
+
+  <h2 id="account">The account</h2>
+  <ul>
+    <li><strong>One account for every site.</strong> Selfhold's window gives the same address to every site the person connects. Sites can see each other's records about that address on the chain, as with any public account.</li>
+    <li><strong>The key is never stored.</strong> The window derives it from the passkey for each request the person approves (WebAuthn's PRF extension), and erases it when the request is done. The passkey belongs to wallet.selfhold.app, so no other site can ask for it.</li>
+    <li><strong>A new device</strong> signs in with <strong>I have a Selfhold passkey</strong>, using the synced passkey. A browser or password manager without the PRF extension can't make the key; the window says so.</li>
+  </ul>
+
+  <h2 id="security">What your site can and can't do</h2>
+  <div class="table"><table>
+    <thead><tr><th>Your site can</th><th>Your site can't</th></tr></thead>
+    <tbody>
+      <tr><td>Ask to connect, and learn the account's address once the person agrees.</td><td>See or use the key, the passkey or the recovery details.</td></tr>
+      <tr><td>Propose a write: records to change, payments, a fee sponsor and hosts.</td><td>Send anything without the person's approval. Every write and every signature asks.</td></tr>
+      <tr><td>Hear progress, and get the sent transaction's ID and nonce.</td><td>Get the signed transaction's bytes, to send again later.</td></tr>
+      <tr><td>Ask for a signature on text.</td><td>Sign as another site: the signed bytes include your origin, as <code>"lattice-message:" + origin + "\n" + text</code>.</td></tr>
+      <tr><td>Suggest a fee sponsor.</td><td>Let the sponsor change the write: the window checks that the sponsor added only its own fee, and refuses otherwise.</td></tr>
+    </tbody>
+  </table></div>
+  <p>The window shows the person your site's origin on every request: the host in bold, and the scheme when it isn't https. A page on localhost is marked "a site on this computer". It answers only the page that opened it, and only to that page's origin.</p>
+
+  <h2 id="lattice">The Lattice you need to know</h2>
+  <dl class="api">
+    <dt>Chains and <code>chainPath</code></dt><dd>Lattice has a main chain, Nexus, and child chains under it. A write names its chain by path, such as <code>["Nexus", "your-chain"]</code>. Each chain may have its own rules for the records it accepts.</dd>
+    <dt>Records</dt><dd>A chain holds records: keys with string values. A write changes some of them, all at once or not at all.</dd>
+    <dt>Nodes and hosts</dt><dd>A node holds a chain and takes transactions for it. Selfhold's window sends a write to the hosts you give <code>selfhold()</code>, or else the ones Nexus lists for the chain.</dd>
+    <dt>Fees</dt><dd>Each transaction pays a fee to the miner who records it. It comes from the account's coins, or from a fee sponsor, paid with work: see <a href="fees.html">Pay fees with work</a>.</dd>
+    <dt>Nonce</dt><dd>Each account's transactions are numbered. A write has landed once the account's next number has passed it.</dd>
+    <dt>Blocks</dt><dd>A block every 10 seconds or so records the transactions waiting. That's why a write usually lands within seconds of being sent.</dd>
+  </dl>
+  <p>For more on chains, nodes and mining, see <a href="https://lattice.build/">lattice.build ↗</a>.</p>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../developers.html"><span>Previous</span>Selfhold for developers</a><a class="next" href="../docs/connect.html"><span>Next</span>Connect an account</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+How+Selfhold+works&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdocs%2Fhow-it-works.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
+</main>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="../index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="../privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</body>
+</html>

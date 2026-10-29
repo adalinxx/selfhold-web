@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Which URL to load, what can change at it, and what changed in each release.">
+  <meta name="theme-color" content="#101112">
+  <title>Versions and changes · Selfhold for developers</title>
+  <link rel="icon" href="../assets/selfhold-icon-32.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+  <a class="brand" href="../index.html" aria-label="Selfhold home"><img src="../assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
+  <nav aria-label="Main navigation"><a class="nav-text" href="../developers.html">Developers</a><a class="nav-text" href="../docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+</header>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="../developers.html">Quickstart</a></li><li><a href="../docs/how-it-works.html">How Selfhold works</a></li><li><a href="../docs/connect.html">Connect an account</a></li><li><a href="../docs/write.html">Write and wait</a></li><li><a href="../docs/fees.html">Pay fees with work</a></li><li><a href="../docs/errors.html">Errors</a></li><li><a href="../docs/testing.html">Test your integration</a></li><li><a href="../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../docs/reference.html">API reference</a></li><li><a href="../docs/versions.html" aria-current="page">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>Versions and changes</h1>
+  <p class="lead-docs">Load the version line that suits you. A line gets fixes but never changes in a way that breaks your site.</p>
+
+  <h2 id="urls">Which URL to load</h2>
+  <div class="table"><table>
+    <thead><tr><th>URL</th><th>What you get</th></tr></thead>
+    <tbody>
+      <tr><td><code>https://wallet.selfhold.app/v1/selfhold.js</code></td><td>The latest release of version 1. It updates in place with fixes and new options, never with a change that breaks a site. Most sites should load this.</td></tr>
+      <tr><td><code>https://wallet.selfhold.app/v1.0.0/selfhold.js</code></td><td>One release, exactly. It never changes. Pin it with its integrity hash, so the browser refuses anything else.</td></tr>
+    </tbody>
+  </table></div>
+  <pre tabindex="0" role="region" aria-label="Example: pin one release"><code>&lt;script type="importmap"&gt;
+{
+  "integrity": {
+    "https://wallet.selfhold.app/v1.0.0/selfhold.js": "sha384-qEys5mx9ezZB7J+IqJrPZlUcGNxZYrHkkADOaYB94L9EanvlwH/uBi+nWMYNN+Ra"
+  }
+}
+&lt;/script&gt;
+&lt;script type="module"&gt;
+  import { selfhold } from "https://wallet.selfhold.app/v1.0.0/selfhold.js";
+&lt;/script&gt;</code></pre>
+  <p>The import map's <code>integrity</code> makes the browser refuse the script unless it is exactly that release. A browser without import-map integrity loads it unchecked; for a guarantee in every browser, copy the file into your site. Each release's hash is published beside it, at <code>/v1.0.0/integrity.txt</code>. You can also copy the file into your site.</p>
+  <p>A change that would break a site gets a new line, <code>/v2/</code>, and <code>/v1/</code> keeps working. Selfhold's window keeps answering older versions of the library.</p>
+
+  <h2 id="changes">Changes</h2>
+  <section class="release" id="v1.0.0" aria-labelledby="v1.0.0-title">
+    <h3 id="v1.0.0-title">1.0.0 <span class="date">2026-10-29</span></h3>
+    <ul>
+      <li>One wallet object for Selfhold for Chrome and Selfhold's window.</li>
+      <li><code>writeRecords()</code> resolves with a <code>Sent</code> you can <code>wait()</code> on: sent, slow, late, then landed, or <code>Lost</code> or <code>NotRecorded</code>.</li>
+      <li>Every failure is a <code>SelfholdError</code> with a <code>code</code>, a <code>message</code> for the person and a <code>docUrl</code>.</li>
+      <li>Selfhold's window takes calls from sites on localhost.</li>
+    </ul>
+  </section>
+  <p>Before 1.0.0, <code>https://wallet.selfhold.app/selfhold.js</code> served the window-only library. It still does, unchanged in behaviour, for sites that load it.</p>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../docs/reference.html"><span>Previous</span>API reference</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+Versions+and+changes&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdocs%2Fversions.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
+</main>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="../index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="../privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Add Selfhold to your site: people connect their Selfhold account, approve writes to Lattice and sign messages. Your site never holds a key.">
+  <meta name="description" content="Add Selfhold to a site: connect a person&#x27;s account and sign a message in five minutes, with no API key.">
   <meta name="theme-color" content="#101112">
   <title>Selfhold for developers</title>
   <link rel="icon" href="assets/selfhold-icon-32.png" type="image/png">
@@ -13,117 +13,98 @@
 <a class="skip" href="#main">Skip to content</a>
 <header class="header wrap">
   <a class="brand" href="index.html" aria-label="Selfhold home"><img src="assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
-  <nav aria-label="Main navigation"><a class="nav-text" href="#quickstart">Quickstart</a><a class="nav-text" href="#api">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+  <nav aria-label="Main navigation"><a class="nav-text" href="developers.html">Developers</a><a class="nav-text" href="docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
 </header>
-<main id="main" class="docs wrap">
-  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS</p>
-  <h1>Add Selfhold<br>to your site.</h1>
-  <p class="lead-docs">People connect their Selfhold account, approve writes to a Lattice chain and sign messages. Your site never holds a key, and every write is approved by the person.</p>
-  <p>One wallet object covers both ways people use Selfhold:</p>
-  <ul>
-    <li><strong>Selfhold for Chrome</strong>, where it is installed.</li>
-    <li><strong>Selfhold's window</strong> everywhere else, phones included. wallet.selfhold.app opens over your page, as a payment window does. The account is a passkey, so there is nothing to install.</li>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="developers.html" aria-current="page">Quickstart</a></li><li><a href="docs/how-it-works.html">How Selfhold works</a></li><li><a href="docs/connect.html">Connect an account</a></li><li><a href="docs/write.html">Write and wait</a></li><li><a href="docs/fees.html">Pay fees with work</a></li><li><a href="docs/errors.html">Errors</a></li><li><a href="docs/testing.html">Test your integration</a></li><li><a href="docs/troubleshooting.html">Troubleshooting</a></li><li><a href="docs/reference.html">API reference</a></li><li><a href="docs/versions.html">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>Selfhold for developers</h1>
+  <p class="lead-docs">Let people connect their Selfhold account to your site, approve writes to a Lattice chain and sign messages. Your site never holds a key, and every write is approved by the person.</p>
+  <ul class="facts">
+    <li><strong>No API key, dashboard or sign-up.</strong> Load one script and call it.</li>
+    <li><strong>Works on phones.</strong> Where Selfhold for Chrome isn't installed, Selfhold's window opens over your page. The account is a passkey, so there's nothing for the person to install.</li>
+    <li><strong>No coins needed</strong>, if your app runs a fee sponsor: the person's device pays the network fee with work. See <a href="docs/fees.html">Pay fees with work</a>.</li>
   </ul>
 
-  <h2 id="quickstart">Quickstart</h2>
-  <p>Load the script from Selfhold's own host. There is no build step:</p>
-<pre><code>&lt;script type="module"&gt;
-  import { selfhold } from "https://wallet.selfhold.app/v1/selfhold.js";
+  <h2 id="quickstart">Quickstart: connect and sign, in five minutes</h2>
+  <p>You'll make a page that connects a Selfhold account and signs a message. It needs no chain and no coins.</p>
+  <p class="prereq"><strong>You need:</strong> a browser with passkeys (Chrome, Safari, Edge or Firefox, current versions), and any way to serve a folder on localhost.</p>
+
+  <h3 id="step-1">1. Save this page as <code>index.html</code></h3>
+  <pre tabindex="0" role="region" aria-label="Example: index.html"><code>&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;title&gt;Selfhold quickstart&lt;/title&gt;
+&lt;button id=&quot;connect&quot;&gt;Connect&lt;/button&gt;
+&lt;button id=&quot;sign&quot; disabled&gt;Sign a message&lt;/button&gt;
+&lt;p id=&quot;out&quot;&gt;&lt;/p&gt;
+
+&lt;script type=&quot;module&quot;&gt;
+  import { selfhold } from &quot;https://wallet.selfhold.app/v1/selfhold.js&quot;;
 
   const wallet = selfhold();
+  const out = document.querySelector(&quot;#out&quot;);
+  const sign = document.querySelector(&quot;#sign&quot;);
 
-  // From a click: the browser opens Selfhold's window only in answer to one.
-  connectButton.onclick = async () =&gt; {
-    const address = await wallet.connect();
-    show(`Connected as ${address}`);
+  // Each call opens Selfhold&#x27;s window, so each runs first in a click.
+  document.querySelector(&quot;#connect&quot;).onclick = async () =&gt; {
+    try {
+      const address = await wallet.connect();
+      out.textContent = `Connected: ${address}`;
+      sign.disabled = false;
+    } catch (error) {
+      out.textContent = error.message; // written for the person, so show it as it is
+    }
   };
 
-  saveButton.onclick = async () =&gt; {
-    const sent = await wallet.writeRecords({
-      chainPath: ["Nexus", "moniker"],
-      actions: [{ key: "profile/bio", newValue: "Hello" }],
-    });
-    if (!sent) return; // nothing to send
-    await sent.wait({ onChange: (state) =&gt; show(words[state]) });
-    show("Saved.");
-  };
-
-  const words = {
-    sent: "Sent. Your device's part is done. The network usually records it in about 10 seconds.",
-    slow: "Taking longer than usual. It's sent and should still go through.",
-    late: "The network hasn't recorded it yet. It may still go through.",
+  sign.onclick = async () =&gt; {
+    try {
+      const { signature } = await wallet.signMessage({ text: &quot;Hello from my site&quot; });
+      out.textContent = `Signed: ${signature.slice(0, 24)}…`;
+    } catch (error) {
+      out.textContent = error.message;
+    }
   };
 &lt;/script&gt;</code></pre>
-  <p>The script is small and readable, so you can see what it runs. You can also copy it into your site and serve it yourself.</p>
 
-  <h2 id="click">Call it from a click</h2>
-  <p><code>connect</code>, <code>writeRecords</code> and <code>signMessage</code> open a window, and browsers open windows only in direct answer to a click. Call them first in your click handler, before you <code>await</code> anything else.</p>
-  <p>If the write needs reading first, pass a promise. The window opens at once and waits for it. Resolving it to <code>null</code> closes the window and sends nothing.</p>
-<pre><code>button.onclick = () =&gt; wallet.writeRecords(readState().then(buildWrite));</code></pre>
+  <h3 id="step-2">2. Serve it on localhost</h3>
+  <p>Selfhold's window takes calls from https sites and from your own computer. From the folder with <code>index.html</code>, run:</p>
+  <pre tabindex="0" role="region" aria-label="Command: serve the folder"><code>python3 -m http.server 8000</code></pre>
+  <p>Then open <code>http://localhost:8000</code>. Opening the file directly (<code>file://</code>) doesn't work: the window needs a page with an origin.</p>
 
-  <h2 id="waiting">After it's sent</h2>
-  <p>A block comes every 10 seconds, so a write usually lands within seconds of being sent. <code>sent.wait()</code> tells you where it is, so you don't have to build that yourself:</p>
-  <div class="table"><table>
-    <thead><tr><th>State</th><th>When</th><th>Say</th></tr></thead>
-    <tbody>
-      <tr><td><code>sent</code></td><td>at once</td><td>The device's part is done. It usually lands in about 10 seconds.</td></tr>
-      <tr><td><code>slow</code></td><td>after 30 seconds</td><td>It's taking longer than usual, and should still go through.</td></tr>
-      <tr><td><code>late</code></td><td>after 5 minutes</td><td>It hasn't landed yet. Offer a "Check again" button: <code>sent.checkNow()</code>.</td></tr>
-      <tr><td>landed</td><td><code>wait()</code> resolves</td><td>Done. Draw the page from what the chain holds.</td></tr>
-    </tbody>
-  </table></div>
-  <p>By default a write has landed once the account's nonce passes it. To decide from your own state instead, pass <code>check: async () =&gt; true | false | "why"</code>. Return a string when another write landed in its place: after three reads that agree, <code>wait()</code> rejects with <code>Lost</code> and that string. After 30 minutes it rejects with <code>NotRecorded</code>.</p>
+  <h3 id="step-3">3. Press Connect</h3>
+  <p>Selfhold's window opens. It says <q>http://localhost:8000 (a site on this computer) asks for your Selfhold account.</q> Press <strong>Create an account</strong>, make the passkey when your browser asks, then press <strong>Connect</strong>.</p>
+  <p>Your page shows:</p>
+  <pre tabindex="0" role="region" aria-label="Expected output after connecting"><code>Connected: bafyreiesev7co6ott6lg4tqtfxroi5vhog3dsqh7ftzh453oagcwxunkfa</code></pre>
+  <p>That's your account's address. Yours will differ.</p>
+  <p>If Selfhold for Chrome is installed in this browser, its own window asks instead, for its own account. <code>wallet.kind</code> says which one your page is using.</p>
 
-  <h2 id="api">API</h2>
-  <h3><code>selfhold(options?)</code></h3>
-  <div class="table"><table>
-    <thead><tr><th>Option</th><th>Default</th><th></th></tr></thead>
-    <tbody>
-      <tr><td><code>use</code></td><td><code>"auto"</code></td><td>Selfhold for Chrome where installed, else the window. Or <code>"window"</code> or <code>"extension"</code> only.</td></tr>
-      <tr><td><code>hosts</code></td><td>the hosts Nexus lists</td><td><code>() =&gt; string[]</code>: the hosts a write is sent to and read from.</td></tr>
-      <tr><td><code>sponsor</code></td><td>none</td><td><code>() =&gt; string</code>: a fee sponsor's URL. With one, Selfhold's window pays network fees with a few seconds of work on the person's device, so they need no coins.</td></tr>
-      <tr><td><code>wallet</code></td><td>wallet.selfhold.app</td><td>The window's page. Tests point it at a local copy.</td></tr>
-    </tbody>
-  </table></div>
-  <dl class="api">
-    <dt><code>wallet.kind</code></dt><dd><code>"extension"</code> or <code>"window"</code>: which one is in use right now.</dd>
-    <dt><code>wallet.connect()</code> → address</dt><dd>Asks the person to connect. Call it from a click.</dd>
-    <dt><code>wallet.address()</code> → address or <code>null</code></dt><dd>The address this site was given. It never asks.</dd>
-    <dt><code>wallet.disconnect()</code></dt><dd>Forgets the address here.</dd>
-    <dt><code>wallet.writeRecords(request, { account?, progress? })</code> → <code>Sent</code> or <code>null</code></dt><dd>Writes records on one chain, and pays addresses in the same transaction, once the person approves. <code>request</code> is <code>{ chainPath, actions: [{ key, oldValue?, newValue? }], payments?: [{ to, amount }], fee? }</code>, or a promise of one. Pass <code>account</code>, the address you built the write for: if the wallet uses another now, nothing is sent. <code>progress(text)</code> hears what the window is doing.</dd>
-    <dt><code>wallet.signMessage({ text })</code> → <code>{ publicKey, signature }</code></dt><dd>Signs <code>"lattice-message:" + your origin + "\n" + text</code>, once the person approves.</dd>
-  </dl>
+  <h3 id="step-4">4. Press Sign a message</h3>
+  <p>The window shows the text and your site. Press <strong>Sign with your passkey</strong>. Your page shows:</p>
+  <pre tabindex="0" role="region" aria-label="Expected output after signing"><code>Signed: 40cd3cab82f2bbf77b714035…</code></pre>
+  <p>Your signature's characters will differ.</p>
+  <p>That's the whole loop: your page asked, the person approved in Selfhold, and your page got the answer. Nothing was sent to a chain.</p>
 
-  <h2 id="errors">Errors</h2>
-  <p>Every failure is a <code>SelfholdError</code> with a <code>code</code>, and a <code>message</code> you can show the person as it is.</p>
-  <div class="table"><table>
-    <thead><tr><th><code>code</code></th><th>What happened</th></tr></thead>
-    <tbody>
-      <tr><td><code>PopupBlocked</code></td><td>The browser blocked the window: the call wasn't made from a click, or pop-ups are off for your site.</td></tr>
-      <tr><td><code>Closed</code></td><td>The person closed the window. Nothing was signed.</td></tr>
-      <tr><td><code>Declined</code></td><td>The person declined.</td></tr>
-      <tr><td><code>Reloaded</code></td><td>The window was reloaded mid-call. Nothing was signed.</td></tr>
-      <tr><td><code>AccountChanged</code></td><td>The wallet uses another account now. Connect again.</td></tr>
-      <tr><td><code>NotConnected</code></td><td>No account was given to this site. Connect first.</td></tr>
-      <tr><td><code>NeedsCoins</code></td><td>The account can't pay. The error carries <code>address</code>, <code>needed</code> and <code>balance</code>, so you can ask for coins.</td></tr>
-      <tr><td><code>NoWallet</code></td><td><code>use: "extension"</code>, and Selfhold for Chrome isn't installed.</td></tr>
-      <tr><td><code>Lost</code></td><td>Sent, but another write landed in its place.</td></tr>
-      <tr><td><code>NotRecorded</code></td><td>Sent, and still not recorded after 30 minutes.</td></tr>
-      <tr><td><code>Failed</code></td><td>Anything else. The message says what.</td></tr>
-    </tbody>
-  </table></div>
-
-  <h2 id="checklist">Before you ship</h2>
-  <ul>
-    <li>Serve your page over https.</li>
-    <li>Don't send <code>Cross-Origin-Opener-Policy: same-origin</code>: it cuts your page off from the window. <code>same-origin-allow-popups</code> is fine.</li>
-    <li>On iPhone, Selfhold's window opens as a tab, and people come back to yours when it's done.</li>
-    <li>Selfhold for Chrome and Selfhold's window each keep their own account. Say which one your page is using.</li>
+  <h2 id="next">Next steps</h2>
+  <ul class="next-steps">
+    <li><a href="docs/how-it-works.html">How Selfhold works</a>: the account, the window, and what your site can and can't do.</li>
+    <li><a href="docs/write.html">Write records and wait for them to land</a>: send a write to a Lattice chain and show the person where it is.</li>
+    <li><a href="docs/fees.html">Pay fees with work</a>: let people write with no coins.</li>
+    <li><a href="docs/errors.html">Errors</a>: what each failure means and what to do.</li>
   </ul>
 
-  <h2 id="example">See it in use</h2>
-  <p><a href="https://app.moniker.bio/">Moniker</a> claims @names on Lattice with Selfhold. Its source is a complete example of connecting, writing and waiting: <a href="https://github.com/adalinxx/moniker">github.com/adalinxx/moniker ↗</a>.</p>
+  <h2 id="install">Ways to load it</h2>
+  <ul>
+    <li><strong>From Selfhold's host</strong>, as above: <code>https://wallet.selfhold.app/v1/selfhold.js</code> gets every fix in version 1. To pin one release instead, see <a href="docs/versions.html">Versions and changes</a>.</li>
+    <li><strong>A copy in your site</strong>: download a release and serve it yourself. It's one small, readable file with no dependencies.</li>
+  </ul>
+  <p>Source, MIT licensed: <a href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">github.com/adalinxx/selfhold-wallet ↗</a></p>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="next" href="docs/how-it-works.html"><span>Next</span>How Selfhold works</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+Selfhold+for+developers&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdevelopers.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
 </main>
-<footer class="wrap footer"><div><a class="brand" href="index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
 </body>
 </html>

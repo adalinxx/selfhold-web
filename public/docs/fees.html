@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How a fee sponsor lets people write with no coins, and how to run one for your app.">
+  <meta name="theme-color" content="#101112">
+  <title>Pay fees with work · Selfhold for developers</title>
+  <link rel="icon" href="../assets/selfhold-icon-32.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+  <a class="brand" href="../index.html" aria-label="Selfhold home"><img src="../assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
+  <nav aria-label="Main navigation"><a class="nav-text" href="../developers.html">Developers</a><a class="nav-text" href="../docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+</header>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="../developers.html">Quickstart</a></li><li><a href="../docs/how-it-works.html">How Selfhold works</a></li><li><a href="../docs/connect.html">Connect an account</a></li><li><a href="../docs/write.html">Write and wait</a></li><li><a href="../docs/fees.html" aria-current="page">Pay fees with work</a></li><li><a href="../docs/errors.html">Errors</a></li><li><a href="../docs/testing.html">Test your integration</a></li><li><a href="../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../docs/reference.html">API reference</a></li><li><a href="../docs/versions.html">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>Pay fees with work</h1>
+  <p class="lead-docs">Every Lattice transaction pays a fee to the miner who records it. With a fee sponsor, your app lets people pay that fee with their device's work instead of coins. A new account can write at once.</p>
+
+  <h2 id="how">How it works</h2>
+  <p>A fee sponsor is a miner that runs beside a node. It trades work for fees:</p>
+  <ol class="docs-steps">
+    <li><strong>The device mines.</strong> Selfhold's window asks the sponsor for work. The person's device (its GPU, or its processor where there's no GPU) grinds shares of the sponsor's next block. A share is about 17 million hashes by default, and a fee takes as many shares as the sponsor asks. The window shows its progress, and stops at about 2 minutes.</li>
+    <li><strong>Each share is a real chance at a block.</strong> The sponsor's block template pays it on Nexus and on every chain its node hosts. If a share wins, the sponsor earns that block's reward and fees.</li>
+    <li><strong>The sponsor credits the person.</strong> Each accepted share is worth its chance of winning times the block's reward, on the chain the write goes to.</li>
+    <li><strong>The sponsor pays the fee from that credit.</strong> It adds a debit of the fee from its own account to the person's transaction, and co-signs it.</li>
+    <li><strong>The person's wallet checks and signs.</strong> Selfhold's window checks that the sponsor added only its own fee, then signs the same transaction and sends it. It carries a real fee, so any node takes it.</li>
+  </ol>
+  <p>The sponsor can't change the write: the window refuses a transaction that differs from the one the person approved in anything but the sponsor's fee.</p>
+
+  <h2 id="app-specific">Each app runs its own sponsor</h2>
+  <p>A sponsor earns on the chains its node hosts, so it pays fees on those chains: the ones your app writes to. There's no shared public sponsor. To offer coin-free writes, deploy one beside a node that hosts your chain:</p>
+  <ul>
+    <li><a href="https://github.com/0xLattice/lattice-sponsor">lattice-sponsor ↗</a>: what it is, how to run it, its options (the work per share, the smallest fee it pays, the most it pays per transaction) and its routes.</li>
+    <li><a href="https://lattice.build/">lattice.build ↗</a>: running a Lattice node and hosting a chain.</li>
+  </ul>
+  <p>Its key holds the coins it pays fees from, and nothing else: a co-signature lends the key's authority to the transaction.</p>
+
+  <h2 id="use">Use it</h2>
+  <pre tabindex="0" role="region" aria-label="Example: give selfhold() your sponsor"><code>const wallet = selfhold({
+  sponsor: () =&gt; &quot;https://sponsor.your-app.example&quot;,
+  hosts: () =&gt; [&quot;https://node.your-app.example&quot;],
+});</code></pre>
+  <p>The URL is the sponsor's base: the window calls its routes under it (<code>/work</code>, <code>/shares</code> and <code>/sponsor</code>). If you serve the sponsor under a path, such as <code>https://your-app.example/sponsor</code>, give that path. The window, at https://wallet.selfhold.app, calls it from the person's browser, so the sponsor must allow requests from that origin.</p>
+  <p>Selfhold's window shows the person the fee, and that their device pays it with work. While it works, the window shows its progress, and <code>progress</code> hears it.</p>
+
+  <h2 id="limits">When work can't pay</h2>
+  <p>Selfhold's window falls back to the account's coins when it has them. If it doesn't, the write fails with <a href="errors.html#NeedsCoins"><code>NeedsCoins</code></a>, and its <code>sponsor</code> says why work couldn't pay:</p>
+  <ul>
+    <li><code>"down"</code>: <strong>the sponsor didn't pay</strong>: it isn't answering, is busy, or takes no work now. Trying again in a few minutes may work.</li>
+    <li><code>"dear"</code>: <strong>too much work</strong>. The window won't work for more than about 2 minutes on this device.</li>
+    <li><code>"most"</code>: <strong>a payment over the sponsor's limit</strong>. A sponsor can also pay part of a payment for work, up to its limit.</li>
+  </ul>
+  <p>Selfhold for Chrome doesn't use a sponsor: it pays fees from the account's coins.</p>
+  <p>Without a sponsor, the account pays each fee from its coins: the window shows how much before the person approves.</p>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../docs/write.html"><span>Previous</span>Write records and wait for them to land</a><a class="next" href="../docs/errors.html"><span>Next</span>Errors</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+Pay+fees+with+work&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdocs%2Ffees.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
+</main>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="../index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="../privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</body>
+</html>

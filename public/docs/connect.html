@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Connect, read the address, choose a wallet, and follow account changes.">
+  <meta name="theme-color" content="#101112">
+  <title>Connect an account · Selfhold for developers</title>
+  <link rel="icon" href="../assets/selfhold-icon-32.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+  <a class="brand" href="../index.html" aria-label="Selfhold home"><img src="../assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
+  <nav aria-label="Main navigation"><a class="nav-text" href="../developers.html">Developers</a><a class="nav-text" href="../docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+</header>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="../developers.html">Quickstart</a></li><li><a href="../docs/how-it-works.html">How Selfhold works</a></li><li><a href="../docs/connect.html" aria-current="page">Connect an account</a></li><li><a href="../docs/write.html">Write and wait</a></li><li><a href="../docs/fees.html">Pay fees with work</a></li><li><a href="../docs/errors.html">Errors</a></li><li><a href="../docs/testing.html">Test your integration</a></li><li><a href="../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../docs/reference.html">API reference</a></li><li><a href="../docs/versions.html">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>Connect an account</h1>
+  <p class="lead-docs">Ask for the person's account once, from a click. After that, your page can read the address without asking.</p>
+
+  <h2 id="connect">Connect</h2>
+  <pre tabindex="0" role="region" aria-label="Example: connect from a click"><code>button.onclick = async () =&gt; {
+  const address = await wallet.connect();
+  showConnected(address);
+};</code></pre>
+  <p><code>connect()</code> opens the wallet's window and resolves with the address once the person agrees. Call it first in the click handler, before you <code>await</code> anything else: browsers open windows only in direct answer to a click. If you wait first, the browser blocks the window and <code>connect()</code> fails with <a href="errors.html#PopupBlocked"><code>PopupBlocked</code></a>.</p>
+
+  <h2 id="address">Read the address on page load</h2>
+  <pre tabindex="0" role="region" aria-label="Example: read the address on load"><code>const address = await wallet.address(); // null if this site wasn&#x27;t given one
+render(address ? signedIn(address) : signedOut());</code></pre>
+  <p><code>address()</code> never opens a window and never asks the person. Selfhold's window remembers the address it gave your site in your site's own storage, so it's there on the next visit.</p>
+
+  <h2 id="which">Which wallet</h2>
+  <p>By default the library uses Selfhold for Chrome where it's installed, and Selfhold's window everywhere else. To choose:</p>
+  <pre tabindex="0" role="region" aria-label="Example: choose a wallet"><code>const wallet = selfhold({ use: &quot;window&quot; });    // always Selfhold&#x27;s window
+const chrome = selfhold({ use: &quot;extension&quot; }); // only Selfhold for Chrome</code></pre>
+  <p>Where Selfhold for Chrome isn't installed, every call on <code>chrome</code>, and reading <code>chrome.kind</code>, throws <a href="errors.html#NoWallet"><code>NoWallet</code></a>. Check <code>window.lattice</code> first, or use the default.</p>
+  <p>Selfhold for Chrome can reach your page after your script starts. If your page offers the choice, read <code>wallet.kind</code> when you render rather than once at load, or listen for the extension's <code>lattice#initialized</code> event on <code>window</code>.</p>
+
+  <h2 id="changes">When the account changes</h2>
+  <p>The person can switch accounts in Selfhold, or use another passkey. Pass the address you built a write for as <code>account</code>:</p>
+  <pre tabindex="0" role="region" aria-label="Example: pass the account a write was built for"><code>await wallet.writeRecords(request, { account: address });</code></pre>
+  <p>If the wallet uses another account now, nothing is sent, and the call fails with <a href="errors.html#AccountChanged"><code>AccountChanged</code></a>, or <a href="errors.html#NotConnected"><code>NotConnected</code></a> if the site was disconnected. Read <code>wallet.address()</code> again and redraw your page.</p>
+
+  <h2 id="disconnect">Disconnect</h2>
+  <p><code>wallet.disconnect()</code> forgets the address on your site. With Selfhold's window, the person's account and passkey are untouched; they can connect again at any time.</p>
+
+  <h2 id="phones">On phones</h2>
+  <ul>
+    <li><strong>iPhone and iPad</strong> open Selfhold's window as a new tab. When the person approves, the window closes and they're back on your tab.</li>
+    <li><strong>Android</strong> opens it as a pop-up window or a tab, depending on the browser.</li>
+    <li>If the person leaves the window's tab while the window is paying a fee with work, the browser may pause that work. Ask them to stay on the window until it says it's done.</li>
+  </ul>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../docs/how-it-works.html"><span>Previous</span>How Selfhold works</a><a class="next" href="../docs/write.html"><span>Next</span>Write records and wait for them to land</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+Connect+an+account&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdocs%2Fconnect.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
+</main>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="../index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="../privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</body>
+</html>

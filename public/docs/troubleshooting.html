@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Fixes, by what you see.">
+  <meta name="theme-color" content="#101112">
+  <title>Troubleshooting · Selfhold for developers</title>
+  <link rel="icon" href="../assets/selfhold-icon-32.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+  <a class="brand" href="../index.html" aria-label="Selfhold home"><img src="../assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
+  <nav aria-label="Main navigation"><a class="nav-text" href="../developers.html">Developers</a><a class="nav-text" href="../docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+</header>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="../developers.html">Quickstart</a></li><li><a href="../docs/how-it-works.html">How Selfhold works</a></li><li><a href="../docs/connect.html">Connect an account</a></li><li><a href="../docs/write.html">Write and wait</a></li><li><a href="../docs/fees.html">Pay fees with work</a></li><li><a href="../docs/errors.html">Errors</a></li><li><a href="../docs/testing.html">Test your integration</a></li><li><a href="../docs/troubleshooting.html" aria-current="page">Troubleshooting</a></li><li><a href="../docs/reference.html">API reference</a></li><li><a href="../docs/versions.html">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>Troubleshooting</h1>
+  <p class="lead-docs">Find what you see, then the fix.</p>
+
+  <section class="error-entry" id="nothing-opens" aria-labelledby="nothing-opens-title">
+    <h2 id="nothing-opens-title">Nothing opens when I press the button</h2>
+    <p>The browser blocked the window: the call came after an <code>await</code>, a timer, or outside a click. Make it the first thing the click handler does, and pass any reading as a promise. The error is <a href="errors.html#PopupBlocked"><code>PopupBlocked</code></a>.</p>
+  </section>
+  <section class="error-entry" id="waiting" aria-labelledby="waiting-title">
+    <h2 id="waiting-title">The window opens and says “Waiting for the site…” forever</h2>
+    <p>The window answers only https pages, and pages on <code>http://localhost</code> or <code>http://127.0.0.1</code>. Your page is served over http from another address: serve it over https, or from localhost.</p>
+  </section>
+  <section class="error-entry" id="home" aria-labelledby="home-title">
+    <h2 id="home-title">The window shows Selfhold's home page, and the call fails with Closed</h2>
+    <p>Your page sends <code>Cross-Origin-Opener-Policy: same-origin</code>, which cuts it off from the windows it opens. Use <code>same-origin-allow-popups</code>, or no COOP header.</p>
+  </section>
+  <section class="error-entry" id="file" aria-labelledby="file-title">
+    <h2 id="file-title">It doesn't work from a file I opened directly</h2>
+    <p>A <code>file://</code> page has no origin for the window to answer. Serve the folder on localhost (<code>python3 -m http.server 8000</code>).</p>
+  </section>
+  <section class="error-entry" id="passkey" aria-labelledby="passkey-title">
+    <h2 id="passkey-title">“This passkey can’t make a key here”</h2>
+    <p>The browser or password manager doesn't support the passkey PRF extension, which the account's key is derived from. Try a current Chrome, Safari or Edge, or another password manager, or Selfhold for Chrome.</p>
+  </section>
+  <section class="error-entry" id="different-account" aria-labelledby="different-account-title">
+    <h2 id="different-account-title">Someone sees a different account than they expect</h2>
+    <p>Selfhold for Chrome and Selfhold's window keep separate accounts. If the extension is installed, the default wallet is the extension. Show <code>wallet.kind</code> on your page, or choose with <code>use</code>.</p>
+  </section>
+  <section class="error-entry" id="stuck" aria-labelledby="stuck-title">
+    <h2 id="stuck-title">A write stays slow or late</h2>
+    <p>Blocks may be slow on that chain, or the node may have dropped the write. It may still land: show the state, offer <code>sent.checkNow()</code> as “Check again”, and don't resend it on your own. After 30 minutes <code>wait()</code> rejects with <a href="errors.html#NotRecorded"><code>NotRecorded</code></a>.</p>
+  </section>
+  <section class="error-entry" id="coins" aria-labelledby="coins-title">
+    <h2 id="coins-title">People are asked for coins though I have a sponsor</h2>
+    <p>The sponsor was down, or the write needed more work than the window will do, or a payment over the sponsor's limit. The <a href="errors.html#NeedsCoins"><code>NeedsCoins</code></a> error's <code>sponsor</code> says which. Selfhold for Chrome always pays fees from coins.</p>
+  </section>
+  <section class="error-entry" id="iphone" aria-labelledby="iphone-title">
+    <h2 id="iphone-title">On iPhone, the fee work stops</h2>
+    <p>iOS may pause a tab in the background. Ask people to stay on Selfhold's tab until it says it's sent.</p>
+  </section>
+  <section class="error-entry" id="refused" aria-labelledby="refused-title">
+    <h2 id="refused-title">The chain refuses the write</h2>
+    <p>An action didn't match what the chain holds: a key you add already exists, or a key you change no longer holds <code>oldValue</code>. Read the records just before building the write. The chain may also have its own rules for the records it takes.</p>
+  </section>
+  <p>Still stuck? <a href="https://github.com/adalinxx/selfhold-wallet/issues">Search or open an issue ↗</a>.</p>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../docs/testing.html"><span>Previous</span>Test your integration</a><a class="next" href="../docs/reference.html"><span>Next</span>API reference</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+Troubleshooting&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdocs%2Ftroubleshooting.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
+</main>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="../index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="../privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</body>
+</html>
