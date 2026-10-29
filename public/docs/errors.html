@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Every SelfholdError code: what happened, what the person saw, and what to do.">
+  <meta name="theme-color" content="#101112">
+  <title>Errors · Selfhold for developers</title>
+  <link rel="icon" href="../assets/selfhold-icon-32.png" type="image/png">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="header wrap">
+  <a class="brand" href="../index.html" aria-label="Selfhold home"><img src="../assets/selfhold-mark.svg" alt="" width="32" height="32">selfhold</a>
+  <nav aria-label="Main navigation"><a class="nav-text" href="../developers.html">Developers</a><a class="nav-text" href="../docs/reference.html">API</a><a class="button small" href="https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web">Source <span aria-hidden="true">↗</span></a></nav>
+</header>
+<div class="docs-layout wrap">
+<nav class="docs-nav" id="guide" aria-label="Developer guide"><p class="eyebrow">DEVELOPER GUIDE</p><ol><li><a href="../developers.html">Quickstart</a></li><li><a href="../docs/how-it-works.html">How Selfhold works</a></li><li><a href="../docs/connect.html">Connect an account</a></li><li><a href="../docs/write.html">Write and wait</a></li><li><a href="../docs/fees.html">Pay fees with work</a></li><li><a href="../docs/errors.html" aria-current="page">Errors</a></li><li><a href="../docs/testing.html">Test your integration</a></li><li><a href="../docs/troubleshooting.html">Troubleshooting</a></li><li><a href="../docs/reference.html">API reference</a></li><li><a href="../docs/versions.html">Versions and changes</a></li></ol></nav>
+<main id="main" class="docs">
+  <p class="eyebrow">SELFHOLD / FOR DEVELOPERS <a class="to-guide" href="#guide">Guide pages ↓</a></p>
+  <h1>Errors</h1>
+  <p class="lead-docs">Every failure is a <code>SelfholdError</code>. Its <code>code</code> is for your code; its <code>message</code> is written for the person, so show it as it is; its <code>docUrl</code> links here.</p>
+  <pre tabindex="0" role="region" aria-label="Example: handle errors by code"><code>try {
+  await wallet.writeRecords(request, { account: address });
+} catch (error) {
+  if (error.code === &quot;Declined&quot; || error.code === &quot;Closed&quot;) return; // a cancel
+  if (error.code === &quot;NeedsCoins&quot;) return askForCoins(error.address, error.needed - error.balance);
+  if (error.code === &quot;AccountChanged&quot; || error.code === &quot;NotConnected&quot;) return refreshAccount();
+  showError(error.message);
+  console.warn(error.code, error.docUrl);
+}</code></pre>
+
+  <h2 id="codes">Codes</h2>
+  <div class="table"><table>
+    <thead><tr><th><code>code</code></th><th>What happened</th></tr></thead>
+    <tbody><tr><td><a href="#PopupBlocked"><code>PopupBlocked</code></a></td><td>The browser blocked Selfhold's window.</td></tr><tr><td><a href="#Closed"><code>Closed</code></a></td><td>The person closed the window before it answered.</td></tr><tr><td><a href="#Declined"><code>Declined</code></a></td><td>The person declined.</td></tr><tr><td><a href="#Reloaded"><code>Reloaded</code></a></td><td>The window was reloaded in the middle of a call.</td></tr><tr><td><a href="#AccountChanged"><code>AccountChanged</code></a></td><td>The wallet uses another account now.</td></tr><tr><td><a href="#NotConnected"><code>NotConnected</code></a></td><td>This site has no account from the wallet.</td></tr><tr><td><a href="#NeedsCoins"><code>NeedsCoins</code></a></td><td>The account can't pay for the write.</td></tr><tr><td><a href="#NoWallet"><code>NoWallet</code></a></td><td>Selfhold for Chrome isn't installed.</td></tr><tr><td><a href="#Lost"><code>Lost</code></a></td><td>Another write landed in this one's place.</td></tr><tr><td><a href="#NotRecorded"><code>NotRecorded</code></a></td><td>Sent, and still not recorded after 30 minutes.</td></tr><tr><td><a href="#Failed"><code>Failed</code></a></td><td>Anything else.</td></tr></tbody>
+  </table></div>
+
+  <section class="error-entry" id="PopupBlocked" aria-labelledby="PopupBlocked-title">
+    <h3 id="PopupBlocked-title"><code>PopupBlocked</code></h3>
+    <p>The browser blocked Selfhold's window.</p>
+    <dl>
+      <dt>Why</dt><dd>Your page called <code>connect</code>, <code>writeRecords</code> or <code>signMessage</code> after an <code>await</code>, or outside a click, or the person turned pop-ups off for your site.</dd>
+      <dt>What the person saw</dt><dd>Nothing. The window didn't open.</dd>
+      <dt>What to do</dt><dd>Make the call the first thing your click handler does. Pass work that must happen first as a promise (see <a href="write.html#read-first">Read first</a>). If the person blocks pop-ups, the message asks them to allow them.</dd>
+      <dt>Safe to try again</dt><dd>Yes, from a click.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="Closed" aria-labelledby="Closed-title">
+    <h3 id="Closed-title"><code>Closed</code></h3>
+    <p>The person closed the window before it answered.</p>
+    <dl>
+      <dt>Why</dt><dd>They closed the window or its tab, or navigated it away.</dd>
+      <dt>What the person saw</dt><dd>Their own action.</dd>
+      <dt>What to do</dt><dd>Treat it as a cancel. Nothing was signed.</dd>
+      <dt>Safe to try again</dt><dd>Yes.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="Declined" aria-labelledby="Declined-title">
+    <h3 id="Declined-title"><code>Declined</code></h3>
+    <p>The person declined.</p>
+    <dl>
+      <dt>Why</dt><dd>They pressed Decline, or stopped the fee work.</dd>
+      <dt>What the person saw</dt><dd>Their own choice.</dd>
+      <dt>What to do</dt><dd>Treat it as a cancel. Nothing was signed. Selfhold for Chrome waits a few seconds after a decline before it takes the same site's next request.</dd>
+      <dt>Safe to try again</dt><dd>Yes, if they ask.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="Reloaded" aria-labelledby="Reloaded-title">
+    <h3 id="Reloaded-title"><code>Reloaded</code></h3>
+    <p>The window was reloaded in the middle of a call.</p>
+    <dl>
+      <dt>Why</dt><dd>The person reloaded Selfhold's window.</dd>
+      <dt>What the person saw</dt><dd>The window starting over.</dd>
+      <dt>What to do</dt><dd>Nothing was signed, and the call isn't resent. Let the person try again.</dd>
+      <dt>Safe to try again</dt><dd>Yes.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="AccountChanged" aria-labelledby="AccountChanged-title">
+    <h3 id="AccountChanged-title"><code>AccountChanged</code></h3>
+    <p>The wallet uses another account now.</p>
+    <dl>
+      <dt>Why</dt><dd>The <code>account</code> you passed isn't the wallet's account any more: the person switched accounts, or signed in with another passkey.</dd>
+      <dt>What the person saw</dt><dd>Nothing, for this request.</dd>
+      <dt>What to do</dt><dd>Nothing was sent. Read <code>wallet.address()</code> again, redraw your page for that account, and rebuild the write.</dd>
+      <dt>Safe to try again</dt><dd>After you rebuild it.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="NotConnected" aria-labelledby="NotConnected-title">
+    <h3 id="NotConnected-title"><code>NotConnected</code></h3>
+    <p>This site has no account from the wallet.</p>
+    <dl>
+      <dt>Why</dt><dd>You passed an <code>account</code>, but the wallet isn't connected to your site: the person disconnected it, or it was never connected.</dd>
+      <dt>What the person saw</dt><dd>Nothing.</dd>
+      <dt>What to do</dt><dd>Ask them to connect again (<code>wallet.connect()</code>, from a click).</dd>
+      <dt>Safe to try again</dt><dd>After connecting.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="NeedsCoins" aria-labelledby="NeedsCoins-title">
+    <h3 id="NeedsCoins-title"><code>NeedsCoins</code></h3>
+    <p>The account can't pay for the write.</p>
+    <dl>
+      <dt>Why</dt><dd>The account doesn't hold the coins for the write's payments and fee, and no fee sponsor could pay the fee. The error is a <code>NeedsCoins</code>, with <code>address</code>, <code>needed</code> and <code>balance</code> (bigints), and <code>sponsor</code>: why the sponsor didn't pay (<code>"down"</code>, <code>"dear"</code>, <code>"most"</code>), or <code>null</code> if none was asked.</dd>
+      <dt>What the person saw</dt><dd>The window's review, then its message.</dd>
+      <dt>What to do</dt><dd>Show the person how many coins they need and where to send them: <code>needed - balance</code> more, to <code>address</code>. If <code>sponsor</code> is <code>"down"</code>, trying again in a few minutes may work. See <a href="fees.html#limits">When work can't pay</a>.</dd>
+      <dt>Safe to try again</dt><dd>Once the account holds the coins, or the sponsor is back.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="NoWallet" aria-labelledby="NoWallet-title">
+    <h3 id="NoWallet-title"><code>NoWallet</code></h3>
+    <p>Selfhold for Chrome isn't installed.</p>
+    <dl>
+      <dt>Why</dt><dd>You made the wallet with <code>use: "extension"</code>, and the extension isn't in this browser.</dd>
+      <dt>What the person saw</dt><dd>Nothing.</dd>
+      <dt>What to do</dt><dd>Offer Selfhold's window instead (<code>use: "window"</code> or the default), or a link to install Selfhold for Chrome.</dd>
+      <dt>Safe to try again</dt><dd>After installing.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="Lost" aria-labelledby="Lost-title">
+    <h3 id="Lost-title"><code>Lost</code></h3>
+    <p>Another write landed in this one's place.</p>
+    <dl>
+      <dt>Why</dt><dd>Your <code>check</code> returned a string on three reads in a row: the records changed in a way this write can't now apply to.</dd>
+      <dt>What the person saw</dt><dd>Their write sent, then your page's message.</dd>
+      <dt>What to do</dt><dd>Show the message your <code>check</code> returned. Read the chain again, and build a new write only if the person still wants it.</dd>
+      <dt>Safe to try again</dt><dd>As a new write, built from what the chain holds now.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="NotRecorded" aria-labelledby="NotRecorded-title">
+    <h3 id="NotRecorded-title"><code>NotRecorded</code></h3>
+    <p>Sent, and still not recorded after 30 minutes.</p>
+    <dl>
+      <dt>Why</dt><dd>The node took the write but no block recorded it: it was most likely dropped.</dd>
+      <dt>What the person saw</dt><dd>Their write sent, then slow, then late.</dd>
+      <dt>What to do</dt><dd>Read the chain first. If the write isn't there and is still needed, let the person send it again.</dd>
+      <dt>Safe to try again</dt><dd>After checking the chain.</dd>
+    </dl>
+  </section>
+  <section class="error-entry" id="Failed" aria-labelledby="Failed-title">
+    <h3 id="Failed-title"><code>Failed</code></h3>
+    <p>Anything else.</p>
+    <dl>
+      <dt>Why</dt><dd>Something the other codes don't cover: a host that couldn't be reached, a write the chain refused, a passkey that couldn't make a key.</dd>
+      <dt>What the person saw</dt><dd>The wallet's message.</dd>
+      <dt>What to do</dt><dd>Show <code>message</code>: it's written for the person. Report what you can't explain.</dd>
+      <dt>Safe to try again</dt><dd>Depends on the message.</dd>
+    </dl>
+  </section>
+
+  <nav class="prev-next" aria-label="Previous and next"><a class="prev" href="../docs/fees.html"><span>Previous</span>Pay fees with work</a><a class="next" href="../docs/testing.html"><span>Next</span>Test your integration</a></nav>
+  <p class="page-foot">Something wrong or missing here? <a href="https://github.com/adalinxx/selfhold-wallet/issues/new?title=Docs%3A+Errors&amp;body=Page%3A+https%3A%2F%2Fselfhold.app%2Fdocs%2Ferrors.html%0A%0AWhat+was+wrong+or+missing%3A%0A">Report it on GitHub ↗</a></p>
+</main>
+</div>
+<footer class="wrap footer"><div><a class="brand" href="../index.html">selfhold</a><p>Open-source. Self-custodial. Built for Lattice.</p></div><nav aria-label="Footer"><a href="https://github.com/adalinxx/selfhold-wallet">Source ↗</a><a href="https://lattice.build/">Lattice ↗</a><a href="https://github.com/adalinxx/selfhold-wallet/blob/main/docs/privacy-policy.md">Wallet privacy ↗</a><a href="../privacy.html">Website privacy</a><a href="mailto:support@lattice.build">Support ↗</a></nav><p class="footer-note">Your keys. Your control.</p></footer>
+</body>
+</html>

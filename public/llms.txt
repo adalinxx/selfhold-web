@@ -1,0 +1,22 @@
+# Selfhold for developers
+
+> Selfhold is a wallet for Lattice. @selfhold/web lets a website connect a person's Selfhold account (a passkey in Selfhold's window at wallet.selfhold.app, or Selfhold for Chrome), write records to a Lattice chain, wait for writes to land, and handle coded errors. No API key. Load https://wallet.selfhold.app/v1/selfhold.js. Calls that open the wallet must be made first in a click handler.
+
+## Guide
+
+- [Selfhold for developers](https://selfhold.app/developers.html): Add Selfhold to a site: connect a person's account and sign a message in five minutes, with no API key.
+- [How Selfhold works](https://selfhold.app/docs/how-it-works.html): The account, the window, what a site can and can't do, and the Lattice basics a site needs.
+- [Connect an account](https://selfhold.app/docs/connect.html): Connect, read the address, choose a wallet, and follow account changes.
+- [Write records and wait for them to land](https://selfhold.app/docs/write.html): Build a write, send it, and show the person where it is until it lands.
+- [Pay fees with work](https://selfhold.app/docs/fees.html): How a fee sponsor lets people write with no coins, and how to run one for your app.
+- [Errors](https://selfhold.app/docs/errors.html): Every SelfholdError code: what happened, what the person saw, and what to do.
+- [Test your integration](https://selfhold.app/docs/testing.html): Develop on localhost, and drive Selfhold's window in Playwright with a virtual passkey.
+- [Troubleshooting](https://selfhold.app/docs/troubleshooting.html): Fixes, by what you see.
+- [API reference](https://selfhold.app/docs/reference.html): Every export of @selfhold/web.
+- [Versions and changes](https://selfhold.app/docs/versions.html): Which URL to load, what can change at it, and what changed in each release.
+
+## Optional
+
+- [Source and README](https://github.com/adalinxx/selfhold-wallet/tree/main/packages/web): the library's code, types and README.
+- [lattice-sponsor](https://github.com/0xLattice/lattice-sponsor): running a fee sponsor.
+- [Lattice](https://lattice.build/): the network.
